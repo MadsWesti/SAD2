@@ -1,6 +1,7 @@
 # datasets
 imdb-r.txt
 out.txt
+toy.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
