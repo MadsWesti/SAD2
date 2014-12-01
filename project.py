@@ -2,7 +2,7 @@ import re
 import operator
 
 
-def is_unwanted(role):
+def is_wanted(role):
     result = True
     if role == "":
         result = False
@@ -10,7 +10,20 @@ def is_unwanted(role):
         result = False
     if role == "Herself":
         result = False
+    if role == "Themselves":
+        result = False
+    if role == "Additional Voices":
+        result = False
+    if role == "Narrator":
+        result = False
     return result
+
+
+def clean(role):
+    role = re.split('\ \#[0-9]', role)[0]
+    role = re.split('\ \([0-9]{4}', role)[0]
+    role = re.split('\ \(', role)[0]
+    return role
 
 filename = "imdb-r.txt"
 #filename = "toy.txt"
@@ -41,7 +54,9 @@ with open(filename) as f:
             movie_id = re.split(',', line)[0].strip()
             role = re.split(',', line)[2].strip().strip("'")
 
-            if not is_unwanted(role):
+            role = clean(role)
+
+            if not is_wanted(role):
                 continue
  
             if movie_id in movie_genres: # Error with movie 111
@@ -56,7 +71,7 @@ with open(filename) as f:
                 #print(str(movie_id) + " is not in movie_genres dictionary")
 
 
-for g in genres_roles:
+for g in sorted(genres_roles):
     print("GENRE: " + g)
 
     sorted_g = sorted(genres_roles[g].items(), key=operator.itemgetter(1), reverse=True)
