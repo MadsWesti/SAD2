@@ -2,20 +2,20 @@ import re
 import operator
 
 
-def is_wanted(role):
-    result = True
+def is_meta_character(role):
+    result = False
     if role == "":
-        result = False
+        result = True
     if role == "Himself":
-        result = False
+        result = True
     if role == "Herself":
-        result = False
+        result = True
     if role == "Themselves":
-        result = False
+        result = True
     if role == "Additional Voices":
-        result = False
+        result = True
     if role == "Narrator":
-        result = False
+        result = True
     return result
 
 
@@ -56,7 +56,7 @@ with open(filename) as f:
 
             role = clean(role)
 
-            if not is_wanted(role):
+            if is_meta_character(role):
                 continue
  
             if movie_id in movie_genres: # Error with movie 111
