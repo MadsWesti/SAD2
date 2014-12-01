@@ -42,6 +42,7 @@
 \setcounter{page}{1}
 \tableofcontents
 \newpage
+
 \section{Project Introduction}
 So you want to make a movie? And you want it to be a movie with high ranking? We have the working hypothesis, that the success of the movie depends solely on what roles appear in the movie. With that in mind, we will look at the IMDB dataset, and find out what the correlation is between high ranking and the roles list of the movies.\\
 Maybe it is one specific role that generates the high ranking, or it could be a pair, or triplet of the same roles, that do the trick.\\
@@ -71,6 +72,7 @@ We can create a simple solution, but it would probably not be very fast on a nor
 
 \subsection{Project Extension}
 Due to limitations in memory, an extension to the streaming solution could be made. One that does not know the length of the stream beforehand.\\
+
 We could find a more sophisticated algorithm in the course literature. This could help us get a better time complexity, but we must be sure about what we sacrifice in accuracy.\\
 
 \subsection{Subproblems in the Project Extension}
@@ -84,30 +86,37 @@ We could find a more sophisticated algorithm in the course literature. This coul
 \section{Naïve solution to problem}
 \subsection{Metrics for rankings}
 The rankings in the IMDB database are within the interval 1 to 10. For every role, we will calculate a rank for that role in the following way:\\
-Rank = $X \cdot \frac{n}{n+k} + C \cdot \frac{k}{n+k}$\\
+
+Rank = $X \cdot \frac{n}{n+k} + C \cdot \frac{k}{n+k}$ \\ \\
+
 where:        \\
 $X =$ average rating for the movie that the role appeared in\\
 $n =$ number of movies that the role appeared in\\
 $k =$ minimum number of movies required to be listed in the top 250\\
 $C =$ the mean rating across the entire database\\
-This rank is the same weighted rank equation, that IMDB uses to rank their movies. \href{ftp://ftp.sunet.se/pub/tv+movies/imdb/ratings.list.gz}{IMDB ratings database}
 
+This rank is the same weighted rank equation, that IMDB uses to rank their movies. \href{ftp://ftp.sunet.se/pub/tv+movies/imdb/ratings.list.gz}{IMDB ratings database} \\
 
 \begin{easylist}[itemize]
 & maybe a couple of lines about why this metric should be used, and if it’s a bad idea, and why:
-&& plain average
-&& our own scale
+& Compared to plain average
+& Compared to maybe our own scale
 \end{easylist}
+
 
 \section{Simple solution to the stated problem}
 At first we create a simple solution to the problem. One that does not have a complicated algorithm, but also runs through all the data. We then add the subproblems on top of this and analyze them individually.\\
 
+
 \subsection{Adding subproblems}
+
+
 \subsubsection{Data Cleaning Algorithm}
 By looking at the data, and what roles are most frequently used, we have gathered information about some unwanted roles, and some cleaning, that we will have to do.\\
-For every genre, there exists the roles ‘Himself’, ‘Herself’, ‘Narrator’, and ‘’. We are not interested in these, since they all represent a different entity, and if we come across one of these, we simply skip it.\\
-Also, there are many roles that a present multiple times in the same move, and thus will have a rolename with a numbered suffix. eg. ‘Policeman \#1’. These role names will have to be counted as ‘Policeman’, and thus the suffix is stripped.\\
 
+For every genre, there exists the roles ‘Himself’, ‘Herself’, ‘Narrator’, and ‘’. We are not interested in these, since they all represent a different entity, and if we come across one of these, we simply skip it.\\
+
+Also, there are many roles that a present multiple times in the same move, and thus will have a rolename with a numbered suffix. eg. ‘Policeman \#1’. These role names will have to be counted as ‘Policeman’, and thus the suffix is stripped.\\
 
 \begin{easylist}[itemize]
 & String similarity: 
@@ -119,7 +128,9 @@ Also, there are many roles that a present multiple times in the same move, and t
 &&&  Maybe use Jaccard to match two words. 
 \end{easylist}
 
+
 \subsubsection{Synonyms}
+
 \begin{easylist}[itemize]
 & Check every role for synonyms.
 & Find out how to check for ambiguity.
@@ -132,7 +143,9 @@ Also, there are many roles that a present multiple times in the same move, and t
 & Link to an open thesaurus: \href{http://wordnet.princeton.edu/wordnet/download/current-version/}{princeton.edu}
 \end{easylist}
 
+
 \subsubsection{Tendency curves over the years}
+
 \begin{easylist}[itemize]
 & Make the role rank for every year
 & Make definitions on when roles are on the rise, or the opposite, or steady every year.
@@ -146,6 +159,7 @@ Role pairs
 \end{easylist}
 
 \subsection{Space/time analysis}
+
 \begin{easylist}[itemize]
 & State complexity for all the subproblems
 && so all subproblems should be easily distinguishable in the code eg. have their own methods.
@@ -155,13 +169,16 @@ Role pairs
 \end{easylist}
 
 
-
 \section{Extended solution to problem}
+
 \begin{easylist}[itemize]
 & Choose a streaming solution with unknown stream length 
 & Consider MapReduce - discuss why, and how.
 \end{easylist}
 
+
 \section{Discussion}
+
+
 \section{Conclusion}
 \end{document}
