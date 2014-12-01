@@ -22,6 +22,9 @@
 \usepackage[T1]{fontenc} % use for allowing < and > in cleartext
 \usepackage{fixltx2e}    % use for textsubscript
 
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[ampersand]{easylist}
+
 \bibliographystyle{plain}
 \begin{document}
 \date{December 17th 2014\\ IT University of Copenhagen}
@@ -45,23 +48,23 @@ Maybe it is one specific role that generates the high ranking, or it could be a 
 In this project, we will try to find the correlation between a high ranking on IMDB and movie roles.\\
 The solution to the problem should make room for creating a backend, that could answer these type of questions with some variables. Like: \\
 
-\begin{itemize}
-\item What 2 roles should be in my Horror movie, if it was the year 1983?
-\item What 3 roles should be in my Comedy, if it is the year 2014?
-\item What year should I have made an Animation movie with the two roles Policewoman, and Pedestrian?
-\end{itemize}
+\begin{easylist}[itemize]
+& What 2 roles should be in my Horror movie, if it was the year 1983?
+& What 3 roles should be in my Comedy, if it is the year 2014?
+& What year should I have made an Animation movie with the two roles Policewoman, and Pedestrian?
+\end{easylist}
 
 
 \subsection{Subproblems}
 We have divided the problem into subproblems that we will look at as individual algorithmic problems. Their time complexities will also individually be looked at, and discussed.\\
 
-\begin{itemize}
-    \item Make a data cleaning algorithm, that can link similarities (‘Police’, ‘Policewoman’, ‘Policeman’)
-    \item Remove meta-characters like ‘Herself’, ‘Himself’, ‘Narrator’, etc…
-    \item Put the role list through a thesaurus (for finding synonyms)
-    \item What are the tendency curves for all years? (to see what roles are in, out, or steady.)
-    \item What are the top role pairs instead of single roles?
-\end{itemize}
+\begin{easylist}[itemize]
+& Make a data cleaning algorithm, that can link similarities (‘Police’, ‘Policewoman’, ‘Policeman’)
+& Remove meta-characters like ‘Herself’, ‘Himself’, ‘Narrator’, etc…
+& Put the role list through a thesaurus (for finding synonyms)
+& What are the tendency curves for all years? (to see what roles are in, out, or steady.)
+& What are the top role pairs instead of single roles?
+\end{easylist}
 
 \subsection{Algorithmic Solution}
 We can create a simple solution, but it would probably not be very fast on a normal computer, so to optimize we make a streaming solution of the problem. Although one where the total length of the stream is known.\\
@@ -71,11 +74,11 @@ Due to limitations in memory, an extension to the streaming solution could be ma
 We could find a more sophisticated algorithm in the course literature. This could help us get a better time complexity, but we must be sure about what we sacrifice in accuracy.\\
 
 \subsection{Subproblems in the Project Extension}
-\begin{itemize}
-    \item What are the top role triplets instead of pairs or singletons?
-    \item Can we use the heavy hitters principle?
-    \item Should we consider using MapReduce?
-\end{itemize}
+\begin{easylist}[itemize]
+& What are the top role triplets instead of pairs or singletons?
+& Can we use the heavy hitters principle?
+& Should we consider using MapReduce?
+\end{easylist}
 
 
 \section{Naïve solution to problem}
@@ -87,16 +90,14 @@ $X =$ average rating for the movie that the role appeared in\\
 $n =$ number of movies that the role appeared in\\
 $k =$ minimum number of movies required to be listed in the top 250\\
 $C =$ the mean rating across the entire database\\
-This rank is the same weighted rank equation, that IMDB uses to rank their movies. (ftp://ftp.sunet.se/pub/tv+movies/imdb/ratings.list.gz - on line 17)
+This rank is the same weighted rank equation, that IMDB uses to rank their movies. \href{ftp://ftp.sunet.se/pub/tv+movies/imdb/ratings.list.gz}{IMDB ratings database}
 
 
-\begin{itemize}
-\item Here maybe a couple of lines about why this metric should be used, and if it’s a bad idea, and why:
-    \begin{itemize}
-        \item plain average
-        \item our own scale
-    \end{itemize}
-\end{itemize}
+\begin{easylist}[itemize]
+& maybe a couple of lines about why this metric should be used, and if it’s a bad idea, and why:
+&& plain average
+&& our own scale
+\end{easylist}
 
 \section{Simple solution to the stated problem}
 At first we create a simple solution to the problem. One that does not have a complicated algorithm, but also runs through all the data. We then add the subproblems on top of this and analyze them individually.\\
@@ -108,78 +109,58 @@ For every genre, there exists the roles ‘Himself’, ‘Herself’, ‘Narrato
 Also, there are many roles that a present multiple times in the same move, and thus will have a rolename with a numbered suffix. eg. ‘Policeman \#1’. These role names will have to be counted as ‘Policeman’, and thus the suffix is stripped.\\
 
 
-\begin{itemize}
-    \item String similarity: 
-    \begin{itemize}
-        \item “Policewoman” vs “Policeman” 
-        \item “Nurse” vs. “Horse”
-        \item Make a weighted value for every 2 nearly similar words.
-        \begin{itemize}
-            \item  if abs(str1.length-str2.length) $<$  3, then run similarity\_check(str1, str2)
-            \item  Maybe we can use the protein-alikeness algorithm from SAD1 course.
-            \item  Maybe use Jaccard to match two words. 
-        \end{itemize}
-    \end{itemize}
-\end{itemize}
+\begin{easylist}[itemize]
+& String similarity: 
+&& “Policewoman” vs “Policeman” 
+&& “Nurse” vs. “Horse”
+&& Make a weighted value for every 2 nearly similar words.
+&&&  if abs(str1.length-str2.length) $<$  3, then run similarity\_check(str1, str2)
+&&&  Maybe we can use the protein-alikeness algorithm from SAD1 course.
+&&&  Maybe use Jaccard to match two words. 
+\end{easylist}
 
 \subsubsection{Synonyms}
-\begin{itemize}
-    \item Check every role for synonyms.
-    \item Find out how to check for ambiguity.
-    \begin{itemize}
-        \item “Police” vs “Pigs”
-        \begin{itemize}
-            \item Could be same, but might not
-        \end{itemize}
-        \item “Policeman” vs “Policewoman”
-        \begin{itemize}
-            \item Does the gender matter in our algorithm, or do we not care.
-        \end{itemize}
-    \end{itemize}
-    \item Maybe it makes the data worse, or less reliable
-    \begin{itemize}
-        \item So should we include it?
-    \end{itemize}
-    \item Link to an open thesaurus: http://wordnet.princeton.edu/wordnet/download/current-version/ 
-\end{itemize}
+\begin{easylist}[itemize]
+& Check every role for synonyms.
+& Find out how to check for ambiguity.
+&& “Police” vs “Pigs”
+&&& Could be same, but might not
+&& “Policeman” vs “Policewoman”
+&&& Does the gender matter in our algorithm, or do we not care.
+& Maybe it makes the data worse, or less reliable
+&& So should we include it?
+& Link to an open thesaurus: \href{http://wordnet.princeton.edu/wordnet/download/current-version/}{princeton.edu}
+\end{easylist}
 
 \subsubsection{Tendency curves over the years}
-\begin{itemize}
-    \item Make the role rank for every year
-    \item Make definitions on when roles are on the rise, or the opposite, or steady every year.
-    \begin{itemize}
-        \item Maybe we just have to look 5 years back, or maybe we should consider all years
-    \end{itemize}
-    \item Consider exporting the data into a graphable format, for visualization
-    \item Maybe cluster years together in decades? or 5-year clusters?
+\begin{easylist}[itemize]
+& Make the role rank for every year
+& Make definitions on when roles are on the rise, or the opposite, or steady every year.
+&& Maybe we just have to look 5 years back, or maybe we should consider all years
+& Consider exporting the data into a graphable format, for visualization
+& Maybe cluster years together in decades? or 5-year clusters?
 Role pairs
-    \item Discuss how much the complexity rises
-    \item Are there roles in the singleton solution that do not appear in these pairs?
-    \begin{itemize}
-        \item roles that only work alone.
-    \end{itemize}
-\end{itemize}
+& Discuss how much the complexity rises
+& Are there roles in the singleton solution that do not appear in these pairs?
+&& roles that only work alone.
+\end{easylist}
 
 \subsection{Space/time analysis}
-\begin{itemize}
-    \item State complexity for all the subproblems
-    \begin{itemize}
-        \item so all subproblems should be easily distinguishable in the code eg. have their own methods.
-    \end{itemize}
-    \item Which subproblem algorithm has the largest space/time complexity
-    \begin{itemize}
-        \item Where should we set in, to make it faster?
-    \end{itemize}
-    \item Do we already sacrifice accuracy somewhere?
-\end{itemize}
+\begin{easylist}[itemize]
+& State complexity for all the subproblems
+&& so all subproblems should be easily distinguishable in the code eg. have their own methods.
+& Which subproblem algorithm has the largest space/time complexity
+&& Where should we set in, to make it faster?
+& Do we already sacrifice accuracy somewhere?
+\end{easylist}
 
 
 
 \section{Extended solution to problem}
-\begin{itemize}
-    \item Choose a streaming solution with unknown stream length 
-    \item Consider MapReduce - discuss why, and how.
-\end{itemize}
+\begin{easylist}[itemize]
+& Choose a streaming solution with unknown stream length 
+& Consider MapReduce - discuss why, and how.
+\end{easylist}
 
 \section{Discussion}
 \section{Conclusion}
