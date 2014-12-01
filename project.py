@@ -4,31 +4,23 @@ import operator
 
 def is_meta_character(role):
     result = False
-    if role == "":
-        result = True
-    if role == "Himself":
-        result = True
-    if role == "Herself":
-        result = True
-    if role == "Themselves":
-        result = True
-    if role == "Additional Voices":
-        result = True
-    if role == "Narrator":
+    metas = ["Himself", "", "Herself", "Themselves", "Additional Voices", "Narrator", "Extra"]
+    if role in metas:
         result = True
     return result
 
 
 def clean(role):
-    role = re.split('\ \#[0-9]', role)[0]
-    role = re.split('\ \([0-9]{4}', role)[0]
-    role = re.split('\ \(', role)[0]
+    role = re.split('\ \#[0-9]', role)[0] # Takes care of 'Person #2'
+    role = re.split('\ \(', role)[0] # Takes care of 'Merchant (1990)'
     return role
 
 filename = "imdb-r.txt"
 #filename = "toy.txt"
 movie_genres = {}
 genres_roles = {}
+movie_rankings = {}
+average = 0
 
 with open(filename) as f:
     for line in f:
@@ -36,11 +28,22 @@ with open(filename) as f:
             tabletype = line.strip()[13:-8].strip()
             continue
 
+
+        if tabletype == "movies":
+            movie_id = re.split(',', line)[0].strip()
+            rank = re.split(',', line)[-2].strip()
+
+            if rank == "NULL":
+                continue
+            
+            movie_rankings[movie_id] = rank
+                
         
 
         if tabletype == "movies_genres":
             movie_id = re.split(',', line)[0].strip()
             genre = re.split(',', line)[1].strip().strip("'")
+
             if movie_id in movie_genres:
                 movie_genres[movie_id].append(genre)
             else:
@@ -53,6 +56,11 @@ with open(filename) as f:
         if tabletype == "roles":
             movie_id = re.split(',', line)[0].strip()
             role = re.split(',', line)[2].strip().strip("'")
+            if movie_id in movie_rankings:
+                rank = float(movie_rankings[movie_id])
+            else:
+                #rank = float(0)
+                continue
 
             role = clean(role)
 
@@ -64,9 +72,12 @@ with open(filename) as f:
 
                 for genre in genres:
                     if role in genres_roles[genre]:
-                        genres_roles[genre][role] += 1
+                        count = genres_roles[genre][role][1]
+                        avg = genres_roles[genre][role][0]
+                        genres_roles[genre][role][1] += 1
+                        genres_roles[genre][role][0] = (avg*count+rank)/(count+1)
                     else:
-                        genres_roles[genre][role] = 1
+                        genres_roles[genre][role] = [rank, 1]
             #else:
                 #print(str(movie_id) + " is not in movie_genres dictionary")
 
