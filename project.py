@@ -4,7 +4,7 @@ import operator
 
 def is_meta_character(role):
     result = False
-    metas = ["Himself", "", "Herself", "Themselves", "Additional Voices", "Narrator", "Extra", "Host", "Undetermined Role"]
+    metas = ["Himself", "", "Herself", "Themselves", "Additional Voices", "Narrator", "Extra", "Host", "Undetermined Role", "Cameo appearance"]
     if role in metas:
         result = True
     return result
@@ -13,6 +13,7 @@ def is_meta_character(role):
 def clean(role):
     role = re.split('\ \#[0-9]', role)[0] # Takes care of 'Person #2'
     role = re.split('\ \(', role)[0] # Takes care of 'Merchant (1990)'
+    role = re.split('\ \[', role)[0] # Takes care of 'Merchant (1990)'
     return role
 
 
@@ -27,6 +28,7 @@ def calculate_rank(rankings, average):
 
 def calculate_score1(rankings):
     n = len(rankings)
+    n_total = float(len(all_rankings))
     score = n/n_total*sum(rankings)/float(n)*100
     return score, n
 
@@ -47,6 +49,7 @@ filename = "imdb-r.txt"
 roles = {}
 movies = {}
 all_rankings = []
+pair_result = {}
 
 def pair_parse_data():
     with open(filename) as f:
@@ -68,6 +71,7 @@ def pair_parse_data():
 
                 rank = float(rank)
                 
+                all_rankings.append(rank)
                 movies[movie_id] = [], rank
                     
 
@@ -172,6 +176,13 @@ create_pairs()
 
 for role in roles:
     root = roles[role]
-    print(role)
     for role2 in root:
-        print("   " + role2 + "   " + str(len(root[role2])))
+        result = calculate_score1(root[role2])
+        if result[0] > 0.1:
+            pair_result[role, role2] = result
+
+
+sorted_roles = sorted(pair_result.items(), key=operator.itemgetter(1), reverse=True)
+
+for role in sorted_roles:
+    print(role)
