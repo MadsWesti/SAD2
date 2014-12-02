@@ -33,17 +33,26 @@ def calculate_score1(rankings):
     return score, n
 
 
-def calculate_score2(rankings, average, n_genre):
+def calculate_score2(rankings):
     rankings_good = []
     rankings_bad = []
+    n = len(rankings)
     for ranking in rankings:
         if ranking > average:
             rankings_good.append(ranking)
         else:
             rankings_bad.append(ranking)
 
-    score = sum(rankings_good)/n_genre - sum(rankings_bad)/n_genre
-    return score*100, len(rankings_good), len(rankings_bad)
+    score = 100*(sum(rankings_good)/n_total - sum(rankings_bad)/n_total)
+    return score, len(rankings_good), len(rankings_bad)
+
+
+def calculate_average(rankings):
+    return sum(rankings)/float(len(rankings))
+
+
+def calculate_count(rankings):
+    return len(rankings)
 
 filename = "imdb-r.txt"
 roles = {}
@@ -173,13 +182,16 @@ def create_pairs():
 pair_parse_data()
 print("parsing done")
 create_pairs()
+n_total = float(len(all_rankings))
+average = sum(all_rankings)/n_total
 
 for role in roles:
     root = roles[role]
     for role2 in root:
-        result = calculate_score1(root[role2])
-        if result[0] > 0.1:
-            pair_result[role, role2] = result
+        #result = calculate_score2(root[role2])
+        #result = calculate_average(root[role2])
+        result = calculate_count(root[role2])
+        pair_result[role, role2] = result
 
 
 sorted_roles = sorted(pair_result.items(), key=operator.itemgetter(1), reverse=True)
