@@ -48,9 +48,49 @@ roles = {}
 movies = {}
 all_rankings = []
 
+def pair_parse_data():
+    with open(filename) as f:
+        #counter = 0 # debugging
+        for line in f:
+            #if counter == 100000: # debugging
+                #break # debugging
+            if line.strip()[0:10] == "LOCK TABLE":
+                tabletype = line.strip()[13:-8].strip()
+                continue
+
+
+            if tabletype == "movies":
+                movie_id = re.split(',', line)[0].strip()
+                rank = re.split(',', line)[-2].strip()
+
+                if rank == "NULL":
+                    continue
+
+                rank = float(rank)
+                
+                movies[movie_id] = [], rank
+                    
+
+            if tabletype == "roles":
+                #counter += 1 # debugging
+                movie_id = re.split(',', line)[0].strip()
+                role = re.split(',', line)[2].strip().strip("'")
+
+                if movie_id in movies:
+                    role = clean(role) # removes suffices like (1999-2003)
+                    if is_meta_character(role): # Removes roles like "Herself" "Himself"
+                        continue
+                    movies[movie_id][0].append(role)
+                else:
+                    continue
+
+
 def parse_data():
     with open(filename) as f:
+        counter = 0 # debugging
         for line in f:
+            if counter == 100000: # debugging
+                break # debugging
             if line.strip()[0:10] == "LOCK TABLE":
                 tabletype = line.strip()[13:-8].strip()
                 continue
@@ -69,6 +109,7 @@ def parse_data():
                     
 
             if tabletype == "roles":
+                counter += 1 # debugging
                 movie_id = re.split(',', line)[0].strip()
                 role = re.split(',', line)[2].strip().strip("'")
 
@@ -90,24 +131,47 @@ def parse_data():
 
 
 
-parse_data()
-print("parsing done")
+def print_singletons():
+    n_total = len(all_rankings)
+    average = sum(all_rankings)/float(n_total)
 
-n_total = len(all_rankings)
-average = sum(all_rankings)/float(n_total)
+    for role in roles:
+
+        roles[role] = calculate_score1(roles[role])  
+        
+    print("calculating score done")
+
+    sorted_roles = sorted(roles.items(), key=operator.itemgetter(1), reverse=True)
+
+    print("Sorting done")
+
+    for i in range(0,10):
+        if i < len(sorted_roles):
+            print(sorted_roles[i])
+
+
+def create_pairs():
+    for movie in movies:
+        #print(movie)
+        for role in movies[movie][0]:
+            if role not in roles:
+                roles[role] = {}
+            for role2 in movies[movie][0]:
+                if role == role2:
+                    break
+                if role > role2:
+                    break
+                if role2 in roles[role]:
+                    roles[role][role2].append(movies[movie][1])
+                else:
+                    roles[role][role2] = [movies[movie][1]]
+
+pair_parse_data()
+print("parsing done")
+create_pairs()
 
 for role in roles:
-
-    roles[role] = calculate_score1(roles[role])  
-    
-print("calculating score done")
-
-sorted_roles = sorted(roles.items(), key=operator.itemgetter(1), reverse=True)
-
-print("Sorting done")
-
-for i in range(0,10):
-    if i < len(sorted_roles):
-        print(sorted_roles[i])
-
-
+    root = roles[role]
+    print(role)
+    for role2 in root:
+        print("   " + role2 + "   " + str(len(root[role2])))
