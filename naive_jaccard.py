@@ -10,7 +10,7 @@ def is_meta_character(role):
 
 
 def parse_data():
-    filename = "imdb-r.txt"
+    filename = "toy/toy_4k.txt"
     roles = {}
     movies_table = {}
     movies = []
@@ -89,5 +89,5 @@ matrix, movies, roles = parse_data()
 similarity = calculate_jaccard(matrix, movies, roles)
 
 for pair in similarity:
-    if similarity[pair] >= 0.5:
+    if similarity[pair] >= 0.2:
         print pair, " -- " + str(similarity[pair])
