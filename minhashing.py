@@ -1,6 +1,5 @@
 import re, math, time
 import random
-import numpy
 
 #til at finde p... finder det naeste primtal stoerre end N
 def get_prime_larger_than(N):
@@ -30,7 +29,6 @@ def get_hash_variables(N):
     b = random.randrange(0,p)#
     #B = [((a*x + b) % p) % N for x in A]
     return a, b, p
-
 
 
 def is_meta_character(role):
@@ -80,54 +78,69 @@ def parse_data():
     return roles        
 
 
-def calculate_jaccard(s1 , s2):
-    return float(len(s1.intersection(s2)))/float(len(s1.union(s2)))
+def dummy_data():
+    characteristic_matrix = {}
+    characteristic_matrix["r1",1] = 1
+    characteristic_matrix["r1",2] = 1
+    characteristic_matrix["r1",3] = 1
+    characteristic_matrix["r2",2] = 1
+    characteristic_matrix["r2",3] = 1
+    characteristic_matrix["r3",3]  = 1
+    return characteristic_matrix, [1,2,3], ["r1", "r2", "r3"]
 
+def create_sig_matrix(k, movies, roles, matrix):
+    hashes = []
+    signature_matrix = [[float('Inf')]*len(roles) for i in range(0, k)]
+    for i in range(0, k):
+        hashes.append(get_hash_variables(len(movies)))
 
-def calculate_role_similarity(roles):
+    print(hashes)
+    print(len(movies))
+    for j in range(0, len(movies)):
+        for r in range(0, len(roles)):
+            if (roles[r],movies[j]) in matrix:
+                for i,(a,b,p) in enumerate(hashes):
+                    hash_value = (a*j+b)%p%len(movies)
+                    if hash_value < signature_matrix[i][r]:
+                        signature_matrix[i][r] = hash_value
+                        print(signature_matrix)
+    return signature_matrix
+
+def calculate_jaccard(matrix, movies, roles):
     similarity = {}
     for r1 in roles:
         for r2 in roles:
-            if r1 >= r2:
-                continue
-            similarity[(r1,r2)] = calculate_jaccard(roles[r1], roles[r2])
+            if r1 < r2:
+                x = 0
+                y = 0
+                for m in movies:
+                    if (r1, m) in matrix and (r2, m) in matrix:
+                        x += 1
+                    elif (r1, m) in matrix or (r2, m) in matrix:
+                        y += 1
+
+                similarity[r1,r2] = float(x)/float(x+y)
     return similarity
+    
+def calculate_jaccard_approx(matrix, roles):
+    sim = {}
+    for r1 in range(0, len(roles)):
+        for r2 in range(0, r1):
+            print(str(r1) + " " + str(r2))
+            for i in range(0, len(matrix)):
+                if matrix[i][r1] == matrix[i][r2]:
+                    if (r1,r2) in sim:
+                        sim[r1,r2] += 1
+                    else:
+                        sim[r1,r2] = 1
+                        
+            
+    return sim
 
 
-start = time.time()
-roles = parse_data()
-similarity = calculate_role_similarity(roles)
-signature_matrix = []
-similarity_matrix = []
-hashes = {}
+M, m, r = dummy_data()
+sig_matrix = create_sig_matrix(2, m, r, M)
+print(sig_matrix)
+jaccard = calculate_jaccard_approx(sig_matrix, r)
+print(jaccard)
 
-i = 0
-for role in roles:
-    print(role)
-
-
-# Creating the hash functions (well really just their variables)
-for i in range(0, 10):
-    hashes[i] = get_hash_variables(i)
-
-
-# Creating the signature matrix
-N = len(movies)
-for m in range(0, N):
-    tmp = []
-    for i in hashes:
-        a, b, p = hashes[i]
-        hash_value = (a*m+b)%p%N
-        tmp.append(hash_value)
-    signature_matrix.append(tmp)
-
-signature_matrix_T = numpy.transpose(signature_matrix)
-similarity_matrix = numpy.dot(signature_matrix, signature_matrix_T)
-print(similarity_matrix)
-
-print(len(similarity_matrix))
-
-
-#for pair in similarity:
-    #if similarity[pair] > 0.01 and similarity[pair] != 1.0:
-        #print pair, similarity[pair]
