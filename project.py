@@ -1,15 +1,13 @@
-import re, math, time
+import re, math
 import random
 
-#til at finde p... finder det naeste primtal stoerre end N
-def get_prime_larger_than(N):
+def get_first_prime_larger_than(N):
     next_int = N+1
     if is_prime(next_int):
         return next_int
     else:
-        return get_prime_larger_than(next_int)
+        return get_first_prime_larger_than(next_int)
 
-#checker om et tal er et primtal.
 def is_prime(n):
     if n <= 3:
         return n >= 2
@@ -20,15 +18,10 @@ def is_prime(n):
             return False
     return True
 
-# finder en unvirsal hashing function, det er stadig collisions en gang i mellem... jeg ved ikke om det er meningen at den skal vaere collision-fri eller ej.
-def get_hash_variables(N):
-    #A = range(0,10)
-    #N = len(A) 
-    p = get_prime_larger_than(N)
-    a = random.randrange(0,p)# i hvilket interval vaelges der??? 
-    b = random.randrange(0,p)#
-    #B = [((a*x + b) % p) % N for x in A]
-    return a, b, p
+def get_hash_variables(p):
+    a = random.randrange(0,p)
+    b = random.randrange(0,p)
+    return a, b
 
 
 def is_meta_character(role):
@@ -38,12 +31,54 @@ def is_meta_character(role):
         result = True
     return result
 
+def clean(role):
+    role = re.split('\ \#[0-9]', role)[0] # Takes care of 'Person #2'
+    role = re.split('\ \(', role)[0] # Takes care of 'Merchant (1990)'
+    role = re.split('\ \[', role)[0] # Takes care of 'Merchant [1990]'
+    return role
+
+def calculate_rank(rankings, average):
+    n = float(len(rankings))
+    X = sum(rankings)/n
+    k = 10
+    C = average
+    return X*n/(n+k)+C*k/(n+k), len(rankings)
+    #return X, len(rankings)
+
+def calculate_score1(rankings):
+    n = len(rankings)
+    n_total = float(len(all_rankings))
+    score = n/n_total*sum(rankings)/float(n)*100
+    return score, n
+
+
+def calculate_score2(rankings):
+    rankings_good = []
+    rankings_bad = []
+    n = len(rankings)
+    for ranking in rankings:
+        if ranking > average:
+            rankings_good.append(ranking)
+        else:
+            rankings_bad.append(ranking)
+
+    score = 100*(sum(rankings_good)/n_total - sum(rankings_bad)/n_total)
+    return score, len(rankings_good), len(rankings_bad)
+
+
 
 movies = {}
 
+
 def parse_data():
-    filename = "toy/toy_1k.txt"
+    filename = "toy/toy_4k.txt"
     roles = {}
+    movies_table = {}
+    movies = []
+    roles = []
+    characteristic_matrix = {}
+
+
     with open(filename) as f:
         for line in f:
             if line.strip()[0:10] == "LOCK TABLE":
@@ -58,25 +93,26 @@ def parse_data():
                     continue
 
                 rank = float(rank)
-                movies[movie_id] = rank
+                movies_table[movie_id] = rank
 
             if tabletype == "roles":
                 movie_id = int(re.split(',', line)[1].strip())
                 role = re.split(',', line)[2].strip().strip("'")
                 
-                if movie_id not in movies:
+                if movie_id not in movies_table: 
                     continue
 
                 if is_meta_character(role):
                     continue
 
-                if movies[movie_id] > 7.0:
-                    if role in roles:
-                        roles[role].add(movie_id)
-                    else:
-                        roles[role] = set([movie_id])
-    return roles        
-
+                if movies_table[movie_id] > 7.0:
+                    movies.append(movie_id)
+                    roles.append(role)
+                    key = (role,movie_id)
+                    if key not in characteristic_matrix:
+                        characteristic_matrix[key] = 1
+    return characteristic_matrix, movies, roles
+            
 
 def dummy_data():
     characteristic_matrix = {}
@@ -90,20 +126,22 @@ def dummy_data():
 
 def create_sig_matrix(k, movies, roles, matrix):
     hashes = []
+    N = len(movies)
+    p = get_first_prime_larger_than(N)
     signature_matrix = [[float('Inf')]*len(roles) for i in range(0, k)]
     for i in range(0, k):
-        hashes.append(get_hash_variables(len(movies)))
+        hashes.append(get_hash_variables(p))
 
     print(hashes)
-    print(len(movies))
-    for j in range(0, len(movies)):
+    print("N: " + str(N) + "    p: " + str(p))
+    for j in range(0, N):
         for r in range(0, len(roles)):
             if (roles[r],movies[j]) in matrix:
-                for i,(a,b,p) in enumerate(hashes):
-                    hash_value = (a*j+b)%p%len(movies)
+                for i,(a,b) in enumerate(hashes):
+                    hash_value = (a*j+b)%p%N
                     if hash_value < signature_matrix[i][r]:
                         signature_matrix[i][r] = hash_value
-                        print(signature_matrix)
+                        #print(signature_matrix) # debugging
     return signature_matrix
 
 def calculate_jaccard(matrix, movies, roles):
@@ -126,7 +164,7 @@ def calculate_jaccard_approx(matrix, roles):
     sim = {}
     for r1 in range(0, len(roles)):
         for r2 in range(0, r1):
-            print(str(r1) + " " + str(r2))
+            #print(str(r1) + " " + str(r2)) # debugging
             for i in range(0, len(matrix)):
                 if matrix[i][r1] == matrix[i][r2]:
                     if (r1,r2) in sim:
@@ -138,9 +176,9 @@ def calculate_jaccard_approx(matrix, roles):
     return sim
 
 
-M, m, r = dummy_data()
-sig_matrix = create_sig_matrix(2, m, r, M)
-print(sig_matrix)
+#M, m, r = dummy_data()
+M, m, r = parse_data()
+sig_matrix = create_sig_matrix(10, m, r, M)
+#print(sig_matrix)
 jaccard = calculate_jaccard_approx(sig_matrix, r)
 print(jaccard)
-
