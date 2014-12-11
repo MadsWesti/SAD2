@@ -189,10 +189,9 @@ def approximate_jaccard(matrix, movies, roles, k):
 
 start = time.time()
 M, m, r = dummy_data()
-
 #M, m, r = parse_data()
 print("done creating data in "+str(time.time() - start)+" seconds")
-#M, m, r = parse_data()
+
 start = time.time()
 jaccard = calculate_jaccard(M, m, r)
 print("done calculating in "+str(time.time() - start)+" seconds")
@@ -206,4 +205,3 @@ for (r1,r2) in jaccard:
     approx = jaccard_approx[r1,r2]
     diff = abs(value - approx)
     print "compare (" +r1+"-"+r2+"): "+ "\nvalue: " +str(value)+"\napproximate: "+ str(approx) +"\ndiffernce: "+ str(diff)+"\n"
-
