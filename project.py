@@ -45,13 +45,25 @@ def clean(role):
 
 def dummy_data():
     characteristic_matrix = {}
-    characteristic_matrix["r1",1] = 1
-    characteristic_matrix["r1",2] = 1
-    characteristic_matrix["r1",3] = 1
-    characteristic_matrix["r2",2] = 1
-    characteristic_matrix["r2",3] = 1
-    characteristic_matrix["r3",3]  = 1
-    return characteristic_matrix, [1,2,3], ["r1", "r2", "r3"]
+    characteristic_matrix["1",0] = 1
+    characteristic_matrix["1",1] = 1
+    characteristic_matrix["1",5] = 1
+    characteristic_matrix["1",6] = 1
+
+    characteristic_matrix["2",2] = 1
+    characteristic_matrix["2",3] = 1
+    characteristic_matrix["2",4] = 1
+
+    characteristic_matrix["3",0] = 1
+    characteristic_matrix["3",5] = 1
+    characteristic_matrix["3",6] = 1
+
+    characteristic_matrix["4",1] = 1
+    characteristic_matrix["4",2] = 1
+    characteristic_matrix["4",3] = 1
+    characteristic_matrix["4",4] = 1
+
+    return characteristic_matrix, [0, 1, 2, 3, 4, 5, 6], ["1", "2", "3", "4"]
 
 
 def create_dummy_data(r, M):
@@ -75,7 +87,7 @@ def create_dummy_data(r, M):
     return matrix, movies, roles
 
 def parse_data():
-    filename = "toy/toy_4k.txt"
+    filename = "toy/toy_1k.txt"
     roles = {}
     movies_table = {}
     movies = []
@@ -118,6 +130,21 @@ def parse_data():
     return characteristic_matrix, movies, roles
             
 
+def calculate_jaccard(matrix, movies, roles):
+    similarity = {}
+    for r1 in range(0, len(roles)):
+        for r2 in range(r1 + 1, len(roles)):
+            x = 0.0
+            y = 0.0
+            for m in movies:
+                if (roles[r1], m) in matrix and (roles[r2], m) in matrix:
+                    x += 1.0
+                elif (roles[r1], m) in matrix or (roles[r2], m) in matrix:
+                    y += 1.0
+            similarity[roles[r1],roles[r2]] = x/(x+y)
+    return similarity 
+
+
 def create_sig_matrix(matrix, movies, roles, k):
     hashes = []
     N = len(movies)
@@ -138,25 +165,12 @@ def create_sig_matrix(matrix, movies, roles, k):
                         #print(signature_matrix) # debugging
     return signature_matrix
 
-def calculate_jaccard(matrix, movies, roles):
-    similarity = {}
-    for r1 in range(0, len(roles)):
-        for r2 in range(0, r1):
-            x = 0
-            y = 0
-            for m in movies:
-                if (roles[r1], m) in matrix and (roles[r2], m) in matrix:
-                    x += 1
-                elif (roles[r1], m) in matrix or (roles[r2], m) in matrix:
-                    y += 1
-            similarity[roles[r1],roles[r2]] = float(x)/float(x+y)
-    return similarity
-    
+
 def approximate_jaccard(matrix, movies, roles, k):
     sig_matrix  = create_sig_matrix(matrix, movies, roles, k)
     temp_dict = {}
     for r1 in range(0, len(roles)):
-        for r2 in range(0, r1):
+        for r2 in range(r1 + 1, len(roles)):
             #print(str(r1) + " " + str(r2)) # debugging
             temp_dict[r1,r2] = 0.0
             for i in range(0, len(sig_matrix)):
@@ -172,8 +186,11 @@ def approximate_jaccard(matrix, movies, roles, k):
     return similarity
     
 
+
 start = time.time()
-M, m, r = create_dummy_data(150, 10)
+M, m, r = dummy_data()
+
+#M, m, r = parse_data()
 print("done creating data in "+str(time.time() - start)+" seconds")
 #M, m, r = parse_data()
 start = time.time()
@@ -181,12 +198,12 @@ jaccard = calculate_jaccard(M, m, r)
 print("done calculating in "+str(time.time() - start)+" seconds")
 
 start = time.time()
-jaccard_approx = approximate_jaccard(M, m, r, 5)
-print("done approximating in "+str(time.time() - start)+" seconds")
+jaccard_approx = approximate_jaccard(M, m, r, 3)
+print("done approximating in "+str(time.time() - start)+" seconds\n")
 
 for (r1,r2) in jaccard:
     value = jaccard[r1,r2]
     approx = jaccard_approx[r1,r2]
     diff = abs(value - approx)
-    print "compare (" +r1+" "+r2+"): "+ "\nvalue: " +str(value)+"\napproximate: "+ str(approx) +"\ndiffernce: "+ str(diff)+"\n"
+    print "compare (" +r1+"-"+r2+"): "+ "\nvalue: " +str(value)+"\napproximate: "+ str(approx) +"\ndiffernce: "+ str(diff)+"\n"
 
