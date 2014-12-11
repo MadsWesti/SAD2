@@ -1,0 +1,108 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{mathtools}   % need for subequations
+\usepackage{graphicx}   % need for figures
+\usepackage{verbatim}   % useful for program listings
+\usepackage{color}      % use if color is used in text
+\usepackage{hyperref}  
+\usepackage{url}
+\usepackage{float}
+\usepackage{todonotes}
+\usepackage{tikz}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{pdfpages}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsfonts}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc} % use for allowing < and > in cleartext
+\usepackage{fixltx2e}    % use for textsubscript
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[ampersand]{easylist}
+%\usepackage{epic,eepic}
+\usepackage{tikz}
+
+\bibliographystyle{plain}
+\begin{document}
+\setlength{\parindent}{0cm}
+\setlength{\unitlength}{1mm}
+\date{December 17th 2014\\ IT University of Copenhagen}
+\title{Roles In Movies\\SAD2 Fall 2014}
+
+\author{Sarah de Voss\\
+\texttt{satv@itu.dk}
+\and Elvis Flesborg\\
+\texttt{efle@itu.dk}
+\and Mads Westi\\
+\texttt{mwek@itu.dk}}
+\clearpage\maketitle
+\newpage
+\thispagestyle{empty}
+\setcounter{page}{1}
+\tableofcontents
+\newpage
+
+\section{The method acting problem}
+Acting is hard, the specific branch of method acting\footnote{Actors use this technique to create in themselves the thoughts and feelings of their role} appear even harder. Whenever an actor has finished playing a role, the process of creating a character starts all over. This is time consuming and inefficient, but what if the actor could use parts of his or hers current role? We want to construct an algorithm that gives actors clues to which roles to audition for next, by measuring the similarity between roles. We have dubbed this similarity search problem the "Method acting problem".
+
+
+\section{Implementation}
+We assume that there is a high correlation between the distinct roles in a movie and the rating it receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data.
+
+
+\subsection{Data representation}
+A role is represented as a list movies\footnote{Corresponding to the ids of the movies, which is is integers} the specific role appear in.
+
+\begin{equation}
+r_1 = \{m_1, m_2, m_3, \ldots , m_i\}
+\end{equation}
+
+\subsection{Measuring similarity}
+Since a role is represented as a set movies, we can measure the similarity between roles using the Jaccard similarity, where the similarity between two sets $S_1$ and $S_2$.
+\begin{equation}
+Sim(S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
+\end{equation}
+
+\subsection{Naive implementation}
+
+The data is stored in a characteristic matrix
+\begin{equation}
+\begin{matrix}
+    1 & 0 & 0 & 1\\
+    1 & 0 & 0 & 1\\
+    1 & 0 & 0 & 1\\
+    1 & 0 & 0 & 1\\
+    1 & 0 & 0 & 1
+\end{matrix}
+\end{equation}
+Because we have to permute every possible pair of roles, 
+the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. Looking at the IMDB data-set $m \geq n$ the time complexity is at larger than quadric i then input size
+
+
+\section{Signatures}
+
+\subsection{Min Hashing}
+
+By using the hash functions\footnote{$(ax + b) \bmod p$} to simulate permutations, we avoid the infeasible calculation of permutations
+
+We still have to permute all pair of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
+
+\section{Locality Sensitive Hashing (LSH)}
+While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resluting in candidate pairs for comparision.
+
+\section{B-bit}
+
+\section{Odd sketch}
+
+\section{Conclusion}
+\end{document}
+
+
+
+
+
