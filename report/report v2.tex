@@ -74,9 +74,9 @@ We will also create some random dummy data to run. This way we will be able to g
 
 \subsection{Naive Implementation}
 
-The data is stored in a characteristic matrix,
+The data is stored in a characteristic matrix, where the rows are movies and the columns are roles.
 \begin{equation}
-roles \times movies = 
+movies \times roles = 
 \begin{bmatrix}
     1 & 0 & 1 & 0\\
     1 & 0 & 0 & 1\\
@@ -92,6 +92,7 @@ Because we have to permute every possible pair of roles, the running time is $O(
 
 
 \section{Min Hashing}
+What is the big deal? The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space. The signatures give an approximation of the data.
 
 Since the permutations of such a large matrix is infeasible, we create $k$ hash functions, and for every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.
 
@@ -104,6 +105,7 @@ We still have to permute all pairs of roles, but the number of comparisons is re
 While the use of minhashing reduces the running time of the similarity calculations. It is still not feasible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisons, the signatures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparison.
 
 What does it do? How is it an improvement over MinHashing?
+
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and we don’t need to inspect all pairs. We only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
 
 What is an effective way of hashing keeping in mind that we want few false negatives/ positives? 
