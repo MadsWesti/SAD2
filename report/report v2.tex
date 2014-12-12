@@ -83,19 +83,20 @@ roles \times movies =
     1 & 0 & 1 & 0
 \end{bmatrix}
 \end{equation}
-Because we have to permute every possible pair of roles, 
-the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. Looking at the IMDB data-set $m \geq n$ the time complexity is at larger than quadric i then input size
+Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$.
+
+%Write something about that if m is almost n, then the runtime is cubic ~n^3%
 
 \section{Signatures}
 
 \subsection{Min Hashing}
 
-By using the hash functions\footnote{$(ax + b) \bmod p$} to simulate permutations, we avoid the infeasible calculation of permutations
+By using the hash functions\footnote{$(ax + b) \bmod p$} to simulate permutations, we avoid the infeasible calculation of permutations.
 
-We still have to permute all pair of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
+We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
 
 \section{Locality Sensitive Hashing (LSH)}
-While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resluting in candidate pairs for comparision.
+While the use of minhashing reduces the running time of the similarity calculations. It is still not feasible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisons, the signatures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparison.
 
 \section{B-bit}
 
