@@ -2,8 +2,8 @@ import random
 
 
 movie_count = 388226
-role_count = 343261
-movies_per_role = 10
+role_count = 190321
+movies_per_role = 5
 
 
 def create_random_movie(id):
