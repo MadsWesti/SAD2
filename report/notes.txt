@@ -1,0 +1,7 @@
+LSH:
+
+We can use the same hash function for all the bands, but we use a separate bucket array for each band, so columns with the same vector in different bands will not hash to the same bucket.
+
+We shall normally assume that two vectors hash to the same bucket if and only if they are identical.
+
+Random hash function that maps row numbers to as many buckets as there are rows. A hash function that maps integers 0, 1, . . . , k − 1 to bucket numbers 0 through k − 1 typically will map some pairs of integers to the same bucket and leave other buckets unfilled. However, the difference is unimportant as long as k is large and there are not too many collisions. We can maintain the fiction that our hash function h “permutes” row r to position h(r) in the permuted order.
