@@ -24,7 +24,6 @@
 
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
-%\usepackage{epic,eepic}
 \usepackage{tikz}
 
 \bibliographystyle{plain}
@@ -52,11 +51,11 @@ Acting is hard, the specific branch of method acting\footnote{Actors use this te
 
 
 \section{Implementation}
-We assume that there is a high correlation between the distinct roles in a movie and the rating it receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data.
+We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data.
 
 
 \subsection{Data representation}
-A role is represented as a list movies\footnote{Corresponding to the ids of the movies, which is is integers} the specific role appear in.
+A role is represented as a list of movies\footnote{Corresponding to the ids of the movies, which is integers} the specific role appear in.
 
 \begin{equation}
 r_1 = \{m_1, m_2, m_3, \ldots , m_i\}
@@ -68,7 +67,12 @@ Since a role is represented as a set movies, we can measure the similarity betwe
 Sim(S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
 \end{equation}
 
-\subsection{Naive implementation}
+\subsection{Measuring Running Time}
+For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. If the running time is taking longer than 5 minutes, we will just put $> 5$.\\
+
+We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, every dummy role appears in exactly 5 movies.
+
+\subsection{Naive Implementation}
 
 The data is stored in a characteristic matrix, where the rows are movies and the columns are roles.
 \begin{equation}
@@ -83,16 +87,18 @@ movies \times roles =
     1 & 0 & 1 & 0
 \end{bmatrix}
 \end{equation}
-Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$.
+Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$. \\
 
-%Write something about that if m is almost n, then the runtime is cubic ~n^3%
 
-\section{Signatures}
+
+
+\section{Min Hashing
 The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.
 
-\subsection{Min Hashing}
 
-By using the hash functions\footnote{$(ax + b) \bmod p$} to simulate permutations, we avoid the infeasible calculation of permutations.
+Since the permutations of such a large matrix is infeasible, we create $k$ hash functions, and for every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.
+
+We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in ch3). \\
 
 We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
 
@@ -104,8 +110,7 @@ What does it do? How is it an improvement over MinHashing?
 
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and we don’t need to inspect all pairs. We only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
 
-What is an effective way of hashing keeping in mind that we want few false negatives/
-positives? 
+What is an effective way of hashing keeping in mind that we want few false negatives/ positives? 
 
 How many bands do we have? How many rows per band? How did we choose these numbers? Accuracy test. 
 
