@@ -89,12 +89,11 @@ movies \times roles =
 \end{equation}
 Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$. \\
 
+\subsubsection{Actual Running Time}
+The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. %With some dummy data created, we can estimate that it would take 4 years.
 
-
-
-\section{Min Hashing
+\section{Min Hashing}
 The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.
-
 
 Since the permutations of such a large matrix is infeasible, we create $k$ hash functions, and for every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.
 
