@@ -96,7 +96,20 @@ By using the hash functions\footnote{$(ax + b) \bmod p$} to simulate permutation
 We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
 
 \section{Locality Sensitive Hashing (LSH)}
+
 While the use of minhashing reduces the running time of the similarity calculations. It is still not feasible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisons, the signatures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparison.
+
+What does it do? How is it an improvement over MinHashing?
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and we don’t need to inspect all pairs. We only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
+
+What is an effective way of hashing keeping in mind that we want few false negatives/
+positives? 
+
+How many bands do we have? How many rows per band? How did we choose these numbers? Accuracy test. 
+
+What do we sacrifice?
+Run time analysis/space complexity
+While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resluting in candidate pairs for comparision.
 
 \section{B-bit}
 

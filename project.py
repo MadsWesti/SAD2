@@ -46,34 +46,28 @@ def clean(role):
 
 def dummy_data():
     characteristic_matrix = {}
-    characteristic_matrix["1",0] = 1
-    characteristic_matrix["1",1] = 1
-    characteristic_matrix["1",5] = 1
-    characteristic_matrix["1",6] = 1
+    characteristic_matrix[0,0] = 1
+    characteristic_matrix[0,1] = 1
+    characteristic_matrix[0,5] = 1
+    characteristic_matrix[0,6] = 1
 
-    characteristic_matrix["2",2] = 1
-    characteristic_matrix["2",3] = 1
-    characteristic_matrix["2",4] = 1
+    characteristic_matrix[1,2] = 1
+    characteristic_matrix[1,3] = 1
+    characteristic_matrix[1,4] = 1
 
-    characteristic_matrix["3",0] = 1
-    characteristic_matrix["3",5] = 1
-    characteristic_matrix["3",6] = 1
+    characteristic_matrix[2,0] = 1
+    characteristic_matrix[2,5] = 1
+    characteristic_matrix[2,6] = 1
 
-    characteristic_matrix["4",1] = 1
-    characteristic_matrix["4",2] = 1
-    characteristic_matrix["4",3] = 1
-    characteristic_matrix["4",4] = 1
+    characteristic_matrix[3,1] = 1
+    characteristic_matrix[3,2] = 1
+    characteristic_matrix[3,3] = 1
+    characteristic_matrix[3,4] = 1
 
+    r = ["r1", "r2", "r3", "r4"]
     m = range(0,7)
-    movies = {}
-    for i in m:
-        movies[i] = len(movies)
-    r = ["1", "2", "3", "4"]
-    roles = {}
-    for j in r:
-        roles[j] = len(roles) 
 
-    return characteristic_matrix, movies, roles 
+    return characteristic_matrix, m, r 
 
 
 def create_dummy_data(r, M):
@@ -133,30 +127,59 @@ def parse_data():
                 if movies_table[movie_id] > 7.0:
 
                     if movie_id not in movies:
-                        movies[movie_id] = len(movies)
-                    
+                        m_i = len(movies)
+                        movies[movie_id] = m_i
+                                         
                     if role not in roles:
-                        roles[role] = len(roles)
-                    
-                    key = (role,movie_id)
-                    if key not in characteristic_matrix:
-                        characteristic_matrix[key] = 1
-    return characteristic_matrix, movies, roles
+                        r_i = len(roles)
+                        roles[role] = r_i    
+                     
+                    if (r_i, m_i) not in characteristic_matrix:
+                        characteristic_matrix[r_i, m_i] = 1
+    #initialise for proper length
+    m = [0]*len(movies)
+    r = [0]*len(roles)
+
+    #change role and movies dictionaries to list i.e. changing from id lookup to index lookup.
+    for m_id in movies:
+        m[movies[m_id]] = m_id
+
+    for role in roles:
+        r[roles[role]] = role 
+
+    #debugging
+    # print "testing length\n"
+    # print "Movies:"
+    # print "Dict:", len(movies), "List:", len(m)
+    # print ""
+    # print "Roles:"
+    # print "Dict:", len(roles), "List:", len(r)
+
+    # for i,m_id in enumerate(m):
+    #     if i != movies[m_id]:
+    #         print "error"
+
+    # for i,role in enumerate(r):
+    #     if i != roles[role]:
+    #         print "error"
+
+    return characteristic_matrix, m, r
             
 
 def calculate_jaccard(matrix, movies, roles):
     similarity = {}
-    for r1 in roles:
-        for r2 in roles:
-            if r1 < r2:
-                x = 0.0
-                y = 0.0
-                for m in movies:
-                    if (r1, m) in matrix and (r2, m) in matrix:
-                        x += 1.0
-                    elif (r1, m) in matrix or (r2, m) in matrix:
-                        y += 1.0
-                similarity[r1,r2] = x/(x+y)
+    n = len(roles)
+    m = len(movies)
+    for i in range(0,n):
+        for j in range(i + 1, n):
+            x = 0.0
+            y = 0.0
+            for k in range(0, m):
+                if (i, k) in matrix and (j, k) in matrix:
+                    x += 1.0
+                elif (i, k) in matrix or (j, k) in matrix:
+                    y += 1.0
+            similarity[roles[i],roles[j]] = x/(x+y)
     return similarity 
 
 
@@ -170,7 +193,6 @@ def create_sig_matrix(matrix, movies, roles, k):
 
     #print(hashes)
     #print("N: " + str(N) + "    p: " + str(p))
-    count = 0
     for role, m_id in matrix:
         j = movies[m_id]
         r = roles[role]
@@ -230,22 +252,19 @@ def approximate_jaccard_lsh(matrix, movies, roles, k, b):
 
 def approximate_jaccard_simple(matrix, movies, roles, k):
     signature_matrix, hash_functions = create_sig_matrix(matrix, movies, roles, k)
-    temp_dict = {}
-    for r1 in roles:
-        for r2 in roles:
-            #print(str(r1) + " " + str(r2)) # debugging
-            if r1 < r2:
-                temp_dict[r1,r2] = 0.0
-                for i in range(0, len(signature_matrix)):
-                    if signature_matrix[i][roles[r1]] == signature_matrix[i][roles[r2]]:
-                        if (r1,r2) in temp_dict:
-                            temp_dict[r1,r2] += 1
-                        else:
-                            temp_dict[r1,r2] = 1
     similarity = {}
-    for (r1,r2) in temp_dict:
-        similarity[r1,r2] = float(temp_dict[(r1,r2)])/float(k)
-
+    n = len(roles)
+    m = len(movies)
+    for i in range(0, n):
+        for j in range(i + 1, n):
+            similarity[roles[i],roles[j]] = 0.0
+            for pi in range(0, k):
+                if signature_matrix[k][i] == signature_matrix[k][j]:
+                    similarity[roles[i],roles[j]] += 1
+    
+    #calculating fractions                    
+    for (r1, r2) in similarity:
+        similarity[r1, r2] /= float(k)
     return similarity
     
 
@@ -255,19 +274,18 @@ M, m, r = dummy_data()
 print("done creating data in "+str(time.time() - start)+" seconds")
 
 start = time.time()
-jaccard = []
 jaccard = calculate_jaccard(M, m, r)
 print("done calculating in "+str(time.time() - start)+" seconds")
 
-start = time.time()
-jaccard_approx = approximate_jaccard_lsh(M, m, r, 3, 1)
-print("done approximating in "+str(time.time() - start)+" seconds\n")
+#start = time.time()
+#jaccard_approx = approximate_jaccard_simple(M, m, r, 3)
+#print("done approximating in "+str(time.time() - start)+" seconds\n")
 
-# for (r1,r2) in jaccard:
-#      value = jaccard[r1,r2]
-#      approx = jaccard_approx[r1,r2]
-#      diff = abs(value - approx)
-#      print "compare (" +r1+"-"+r2+"): "+ "\nvalue: " +str(value)+"\napproximate: "+ str(approx) +"\ndifference: "+ str(diff)+"\n"
+for (r1,r2) in jaccard:
+      value = jaccard[r1,r2]
+      approx = 0# jaccard_approx[r1,r2]
+      diff = abs(value - approx)
+      print "compare (" +r1+"-"+r2+"): "+ "\nvalue: " +str(value)+"\napproximate: "+ str(approx) +"\ndifference: "+ str(diff)+"\n"
 
 
 
