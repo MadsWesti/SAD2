@@ -70,19 +70,21 @@ Sim(S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
 
 \subsection{Naive implementation}
 
-The data is stored in a characteristic matrix
+The data is stored in a characteristic matrix,
 \begin{equation}
-\begin{matrix}
+roles \times movies = 
+\begin{bmatrix}
+    1 & 0 & 1 & 0\\
     1 & 0 & 0 & 1\\
-    1 & 0 & 0 & 1\\
-    1 & 0 & 0 & 1\\
-    1 & 0 & 0 & 1\\
-    1 & 0 & 0 & 1
-\end{matrix}
+    0 & 1 & 0 & 1\\
+    0 & 1 & 0 & 1\\
+    0 & 1 & 0 & 1\\
+    1 & 0 & 1 & 0\\
+    1 & 0 & 1 & 0
+\end{bmatrix}
 \end{equation}
 Because we have to permute every possible pair of roles, 
 the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. Looking at the IMDB data-set $m \geq n$ the time complexity is at larger than quadric i then input size
-
 
 \section{Signatures}
 
