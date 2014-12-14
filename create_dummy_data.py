@@ -1,8 +1,8 @@
 import random
 
 
-movie_count = 388226
-role_count = 190321
+movie_count = 800
+role_count = 8000
 movies_per_role = 5
 
 

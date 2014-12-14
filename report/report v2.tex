@@ -25,8 +25,10 @@
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
 \usepackage{tikz}
+\usepackage{epstopdf}
 
 \bibliographystyle{plain}
+
 \begin{document}
 \setlength{\parindent}{0cm}
 \setlength{\unitlength}{1mm}
@@ -66,11 +68,13 @@ Since a role is represented as a set movies, we can measure the similarity betwe
 \begin{equation}
 Sim(S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
 \end{equation}
+The Jaccard index falls in the range of 0-1. If the index is 1 the sets are the same. If it is 0 the sets are disjoint.
+
 
 \subsection{Measuring Running Time}
-For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. If the running time is taking longer than 5 minutes, we will just put $> 5$.\\
+For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. Though, if the running time is taking longer than out patience permits, we will just put in how long we waited, and note that we did not run it through.
 
-We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, every dummy role appears in exactly 5 movies.
+We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many roles, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 57,736 distinct movies, and 553,263 distinct roles (not counting the movies without any roles and roles with nonexisting movie-ids).
 
 \subsection{Naive Implementation}
 
@@ -89,25 +93,26 @@ movies \times roles =
 \end{equation}
 Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$. \\
 
+\subsubsection{Actual Running Time}
+The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. We ran the implementation on random dummy datasets
 
+\begin{figure}
+    \begin{center}
+        \input{plots/naive_actual_time.tex}
+        \label{graph:naive_actual_time}
+    \end{center}
+\end{figure}
 
+\section{Min Hashing}
+Since the permutation of such a large matrix is infeasible, we create $k$ hash functions. The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.
 
-\section{Min Hashing
-The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.
+The signatures are created in the following way: For every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.
 
-
-Since the permutations of such a large matrix is infeasible, we create $k$ hash functions, and for every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.
-
-We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in ch3). \\
+We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in ch3). How did we choose our $k$? \\
 
 We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
 
 \section{Locality Sensitive Hashing (LSH)}
-
-While the use of minhashing reduces the running time of the similarity calculations. It is still not feasible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisons, the signatures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparison.
-
-What does it do? How is it an improvement over MinHashing?
-
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and we don’t need to inspect all pairs. We only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
 
 What is an effective way of hashing keeping in mind that we want few false negatives/ positives? 
