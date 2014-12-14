@@ -4,6 +4,7 @@ import time
 
 
 # CONFIGURATION
+#filename = "imdb-r.txt"
 filename = "rnd_1k_10k.txt"
 min_rank = 9.0
 
@@ -59,7 +60,6 @@ def clean(role):
 
 
 def parse_data():
-    roles = {}
     movies_table = {}
     movies = {}
     roles = {}
@@ -253,10 +253,9 @@ if lsh:
     jaccard_approx = {}
     start = time.time()
     jaccard_approx = approximate_jaccard_lsh(matrix, movies, roles, k, b)
-    max_pair = max(jaccard_approx)
-    print("   Max pair is " + str(max_pair) + " = " + str(jaccard_approx[max_pair]))
+    r1, r2 = max(jaccard_approx)
+    print("   Max pair is " + str(r1) + "," + str(r2) + " = " + str(jaccard_approx[(r1,r2)]))
     print("   took "+str(time.time() - start)+" seconds\n")
-
 
 
 """
