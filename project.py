@@ -4,17 +4,18 @@ import time
 
 
 # CONFIGURATION
-filename = "rnd_50_500.txt"
+filename = "rnd_1k_10k.txt"
+min_rank = 9.0
 
 ## Calculations to run:
-naive = True
+naive = False
 lsh = True
-minhash = True
+minhash = False
 dummy = True
 
 ## Number of hash functions (k) and bands (b)
-k = 6
-b = 3
+k = 30
+b = 10
 
 
 def get_first_prime_larger_than(N):
@@ -89,7 +90,7 @@ def parse_data():
 
                 if is_meta_character(role):
                     continue 
-                if movies_table[movie_id] >= 7.0:
+                if movies_table[movie_id] >= min_rank:
 
                     m_i = len(movies)
                     if movie_id not in movies:
@@ -107,6 +108,9 @@ def parse_data():
     #initialise for proper length
     m = [0]*len(movies)
     r = [0]*len(roles)
+
+    print("   " + str(len(movies)) + " movies (with rank >= " + str(min_rank) + ")")
+    print("   " + str(len(roles)) + " roles")
 
     #change role and movies dictionaries to list i.e. changing from id lookup to index lookup.
     for m_id in movies:
@@ -151,7 +155,6 @@ def create_sig_matrix(matrix, m, n, k):
 
 
 def approximate_jaccard_lsh(matrix, movies, roles, K, bands):
-    print("   " + str(len(matrix)))
     similarity = {}
     n = len(roles)
     m = len(movies)
@@ -236,7 +239,7 @@ if naive:
 
 if minhash:
     print("Running Min Hashing")
-    jaccard_approx = {}
+    print("   k = " + str(k))
     start = time.time()
     jaccard_approx = approximate_jaccard_minhash(matrix, movies, roles, k)
     print("   took "+str(time.time() - start)+" seconds\n")
@@ -244,9 +247,14 @@ if minhash:
 
 if lsh:
     print("Running LSH")
+    print("   k = " + str(k))
+    print("   b = " + str(b))
+    jaccard_approx = {}
     jaccard_approx = {}
     start = time.time()
     jaccard_approx = approximate_jaccard_lsh(matrix, movies, roles, k, b)
+    max_pair = max(jaccard_approx)
+    print("   Max pair is " + str(max_pair) + " = " + str(jaccard_approx[max_pair]))
     print("   took "+str(time.time() - start)+" seconds\n")
 
 
