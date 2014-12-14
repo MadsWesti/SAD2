@@ -3,6 +3,20 @@ import random
 import time
 
 
+# CONFIGURATION
+filename = "rnd_50_500.txt"
+
+## Calculations to run:
+naive = True
+lsh = True
+minhash = True
+dummy = True
+
+## Number of hash functions (k) and bands (b)
+k = 6
+b = 3
+
+
 def get_first_prime_larger_than(N):
     next_int = N+1
     if is_prime(next_int):
@@ -44,13 +58,11 @@ def clean(role):
 
 
 def parse_data():
-    filename = "dummy.txt"
     roles = {}
     movies_table = {}
     movies = {}
     roles = {}
     characteristic_matrix = {}
-
 
     with open(filename) as f:
         for line in f:
@@ -139,12 +151,12 @@ def create_sig_matrix(matrix, m, n, k):
 
 
 def approximate_jaccard_lsh(matrix, movies, roles, K, bands):
-    print(len(matrix))
+    print("   " + str(len(matrix)))
     similarity = {}
     n = len(roles)
     m = len(movies)
     signature_matrix, hash_functions = create_sig_matrix(matrix, m, n, K)
-    print("signature_matrix done!")
+    print("   signature_matrix done!")
     M = K
     r = M/bands
     c = len(signature_matrix[0]) #number of signatures
@@ -176,7 +188,7 @@ def approximate_jaccard_lsh(matrix, movies, roles, K, bands):
                 for j in bucket:
                     if i < j:
                         candidate_pairs.add((i,j))
-    print("Number of candidate pairs: "+str(len(candidate_pairs)))
+    print("   Number of candidate pairs: "+str(len(candidate_pairs)))
 
     # calculate similarity between candidate pairs
     for i,j in candidate_pairs: 
@@ -209,27 +221,37 @@ def approximate_jaccard_minhash(matrix, movies, roles, k):
         similarity[r1, r2] /= float(k)
     return similarity
     
-lsh = True
-dummy = True
+
+print("Parsing data - " + filename)
 start = time.time()
 matrix, movies, roles = parse_data()
 
-print("done creating data in "+str(time.time() - start)+" seconds")
+print("   took "+str(time.time() - start)+" seconds\n")
 
-if dummy:
+if naive:
+    print("Running naive")
     start = time.time()
     jaccard = calculate_jaccard(matrix, movies, roles )
-    print("done calculating in "+str(time.time() - start)+" seconds")
+    print("   took "+str(time.time() - start)+" seconds\n")
 
-jaccard_approx = {}
-start = time.time()
+if minhash:
+    print("Running Min Hashing")
+    jaccard_approx = {}
+    start = time.time()
+    jaccard_approx = approximate_jaccard_minhash(matrix, movies, roles, k)
+    print("   took "+str(time.time() - start)+" seconds\n")
+
+
 if lsh:
-    jaccard_approx = approximate_jaccard_lsh(matrix, movies, roles, 6, 3)
-else:
-    jaccard_approx = approximate_jaccard_minhash(matrix, movies, roles, 3)
-print("done approximating in "+str(time.time() - start)+" seconds\n")
+    print("Running LSH")
+    jaccard_approx = {}
+    start = time.time()
+    jaccard_approx = approximate_jaccard_lsh(matrix, movies, roles, k, b)
+    print("   took "+str(time.time() - start)+" seconds\n")
 
 
+
+"""
 for (r1,r2) in jaccard:
     value = jaccard[r1,r2]
     approx = jaccard_approx[r1,r2]
@@ -237,3 +259,4 @@ for (r1,r2) in jaccard:
     print "compare (" +r1+"-"+r2+"): "+ "\nvalue: " +str(value)+"\napproximate: "+ str(approx) +"\ndifference: "+ str(diff)+"\n"
 
 
+"""
