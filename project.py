@@ -5,18 +5,21 @@ import time
 
 # CONFIGURATION
 #filename = "imdb-r.txt"
-filename = "rnd_1k_10k.txt"
-min_rank = 9.0
+filename = "rnd/rnd_400_4k.txt"
+min_rank = 0.0
 
-## Calculations to run:
+## Naive
 naive = False
-lsh = True
-minhash = False
-dummy = True
 
-## Number of hash functions (k) and bands (b)
-k = 30
-b = 10
+## MinHashing
+minhash = True
+k = 10 # hash functions
+
+## LSH
+lsh = False
+b = 20 # bands
+bu = 1 # buckets
+### Remember to set the k value in MinHashing
 
 
 def get_first_prime_larger_than(N):
@@ -111,6 +114,7 @@ def parse_data():
 
     print("   " + str(len(movies)) + " movies (with rank >= " + str(min_rank) + ")")
     print("   " + str(len(roles)) + " roles")
+    print("   " + str(len(characteristic_matrix)) + " 1's in characteristic matrix")
 
     #change role and movies dictionaries to list i.e. changing from id lookup to index lookup.
     for m_id in movies:
@@ -162,8 +166,9 @@ def approximate_jaccard_lsh(matrix, movies, roles, K, bands):
     print("   signature_matrix done!")
     M = K
     r = M/bands
+    print("   rows per band = " + str(r))
     c = len(signature_matrix[0]) #number of signatures
-    p = c #number of buckets
+    p = int(c*bu) #number of buckets
     
     #create buckets
     buckets = []
@@ -239,22 +244,25 @@ if naive:
 
 if minhash:
     print("Running Min Hashing")
-    print("   k = " + str(k))
+    print("   k (hash functions) = " + str(k))
     start = time.time()
     jaccard_approx = approximate_jaccard_minhash(matrix, movies, roles, k)
+    max_value = max(jaccard_approx.values())
+    print("   Max value is: " + str(max_value))
     print("   took "+str(time.time() - start)+" seconds\n")
 
 
 if lsh:
     print("Running LSH")
-    print("   k = " + str(k))
-    print("   b = " + str(b))
+    print("   k (hash functions) = " + str(k))
+    print("   bands = " + str(b))
+    print("   bucket fraction = " + str(bu))
     jaccard_approx = {}
     jaccard_approx = {}
     start = time.time()
     jaccard_approx = approximate_jaccard_lsh(matrix, movies, roles, k, b)
-    r1, r2 = max(jaccard_approx)
-    print("   Max pair is " + str(r1) + "," + str(r2) + " = " + str(jaccard_approx[(r1,r2)]))
+    max_value = max(jaccard_approx.values())
+    print("   Max value is: " + str(max_value))
     print("   took "+str(time.time() - start)+" seconds\n")
 
 

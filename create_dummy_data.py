@@ -1,9 +1,10 @@
 import random
+import sys
 
+movie_count = int(sys.argv[1])
+role_count = int(sys.argv[2])
 
-movie_count = 800
-role_count = 8000
-movies_per_role = 5
+movies_per_role = 2
 
 
 def create_random_movie(id):
