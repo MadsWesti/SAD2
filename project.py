@@ -173,11 +173,10 @@ def approximate_jaccard_lsh(matrix, movies, roles, K, bands):
     for i in range(0, bands):
         a, b = hash_functions[i*r]
         for j in range(0, c):
-            v = ""
+            str_list = []
             for k in range(0,r):
-                g = str(signature_matrix[i*r + k][j])
-                v += g
-            hashed_val = (a*int(v)+b)%p
+                str_list.append(str(signature_matrix[i*r + k][j]))
+            hashed_val = (a*int(''.join(str_list))+b)%p
             buckets[i][hashed_val].append(j)
 
     #Find candidate pairs
