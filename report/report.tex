@@ -44,7 +44,7 @@
 \clearpage\maketitle
 \newpage
 \thispagestyle{empty}
-\setcounter{page}{1}
+\setcounter{page}{0}
 \tableofcontents
 \newpage
 
@@ -183,33 +183,21 @@ We still have to permute all pairs of roles, but the number of comparisons is re
 In figure ~\ref{fig:minhashing_at} the actual running times can be seen.
 
 
-\begin{figure}[!htpb]
-    \begin{center}
-        \input{plots/minhashing_at.tex}
-        \caption{MinHashing Actual Times}
-        \label{fig:minhashing_at}
-    \end{center}
-\end{figure}
+%\begin{figure}[!htpb]
+%    \begin{center}
+%        \input{plots/minhashing_at.tex}
+%        \caption{MinHashing Actual Times}
+%        \label{fig:minhashing_at}
+%    \end{center}
+%\end{figure}
 
 
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then hash the vectors into a large number of buckets. If 2 vectors hash to the same bucket there is a good chance that they are similar. These vectors become candidate pairs, and we only compare candidate pairs for similarity. This leaves us with a significant fraction of the original set of pairs to check. \\
 
-When choosing the number of bands, it is important to keeping in mind that we want few false negatives/positives. We can compute the probability of a particular pair becoming a candidate pair by using the S-curve equation. $s$ is the probability that 2 signatures become a candidate pair.
+In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into 2 bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. They are the candidate pairs to be checked for similarity, whereas the red buckets all contain only one or zero signatures, and are not checked for similarity. \\
 
-\begin{equation}
-    \text {S-curve equation} = 1 - (1 - s^r)^b 
-\end{equation}\\
-
-The steepest point on the curve, is the spot where the ratio between false positives and false negatives is $1:1$. This point can be estimated with equation \ref{eq:s-estimate}.
-
-\begin{equation}
-    s = (1/b)^{1/r}
-    \label{eq:s-estimate}
-\end{equation}
-
-
-\begin{figure}
+\begin{figure}[!htpb]
     \begin{center}
         \begin{tikzpicture}
             \draw rectangle (14,4);
@@ -220,6 +208,9 @@ The steepest point on the curve, is the spot where the ratio between false posit
             \foreach \x in {0,...,6} \draw (\x+7, 0) rectangle (\x+7+1, 2);
             \foreach \x in {0,...,6} \draw (\x+7, 2) rectangle (\x+7+1, 4);
             \foreach \x in {0,...,6} \draw (\x+.5, 4.5) node {$S_\x$};
+
+            \draw (-.5,3) node {$b_0$};
+            \draw (-.5,1) node {$b_1$};
 
             \draw (10.5, 4.5) node {$\overbrace{\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad}$};
             \draw (10.5,5.5) node {buckets};
@@ -283,11 +274,37 @@ The steepest point on the curve, is the spot where the ratio between false posit
             \draw (11.5,1.5) node {$S_5$};
 
         \end{tikzpicture}
-    \caption{LSH buckets}
+    \caption{LSH buckets and bands}
     \label{fig:lsh_buckets}
     \end{center}
 \end{figure}
 
+\subsection{Analysis}
+In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures away, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures become a candidate pair. \\
+
+% Tweak b and r
+% Draw the S-curve
+
+We want as few false negatives/positives as possible. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot.
+
+\begin{equation}
+    \text {S-curve equation} = 1 - (1 - s^r)^b 
+\end{equation}\\
+
+\begin{figure}[!htpb]
+    \begin{center}
+        \input{plots/scurve.tex}
+        \caption{S-curve}
+        \label{fig:scurve}
+    \end{center}
+\end{figure}
+
+We choose our similarity threshold on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. 
+
+\begin{equation}
+    s = (1/b)^{1/r}
+    \label{eq:s-estimate}
+\end{equation}
 
 
 How much accuracy do we sacrifice in percent?\\
