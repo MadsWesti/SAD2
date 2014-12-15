@@ -21,6 +21,7 @@
 \usepackage{latexsym}
 \usepackage[T1]{fontenc} % use for allowing < and > in cleartext
 \usepackage{fixltx2e}    % use for textsubscript
+\usepackage[framemethod=tikz]{mdframed}
 
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
@@ -30,6 +31,7 @@
 \bibliographystyle{plain}
 
 \begin{document}
+
 \setlength{\parindent}{0cm}
 \setlength{\unitlength}{1mm}
 \date{December 17th 2014\\ IT University of Copenhagen}
@@ -42,19 +44,27 @@
 \and Mads Westi\\
 \texttt{mwek@itu.dk}}
 \clearpage\maketitle
-\newpage
+
 \thispagestyle{empty}
-\setcounter{page}{1}
+\newpage
 \tableofcontents
+\thispagestyle{empty}
 \newpage
 
+\setcounter{page}{1}
 \section{The method acting problem}
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+Are we changing the problem?
+\end{mdframed}
+
 Acting is hard, the specific branch of method acting\footnote{Actors use this technique to create in themselves the thoughts and feelings of their role} appear even harder. Whenever an actor has finished playing a role, the process of creating a character starts all over. This is time consuming and inefficient, but what if the actor could use parts of his or hers current role? We want to construct an algorithm that gives actors clues to which roles to audition for next, by measuring the similarity between roles. We have dubbed this similarity search problem the "Method acting problem".
 
 
 \section{Implementation}
-We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data.
-
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data. Are we keeping our original problem?
+\end{mdframed}
 We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.
 
 
@@ -76,7 +86,7 @@ But even though there are 10 more roles per movies. Many of these roles are only
 
 This will be taken into account when creating our random dummy data.
 
-\begin{figure}
+\begin{figure}[!htbp]
     \begin{center}
         \input{plots/ones_per_role.tex}
         \caption{Sparseness with cutoff}
@@ -94,27 +104,39 @@ r_1 = \{m_1, m_2, m_3, \ldots , m_i\}
 \end{equation}
 
 The data is stored in a characteristic matrix, where the rows are movies and the columns are roles.
-\begin{equation}
-movies \times roles = 
-\begin{bmatrix}
-    1 & 0 & 1 & 0\\
-    1 & 0 & 0 & 1\\
-    0 & 1 & 0 & 1\\
-    0 & 1 & 0 & 1\\
-    0 & 1 & 0 & 1\\
-    1 & 0 & 1 & 0\\
-    1 & 0 & 1 & 0
-\end{bmatrix}
-\end{equation}
+
+\begin{figure}[!htbp]
+\begin{eqnarray*}
+ & n \ \text{roles} \\
+ m \ \text{movies} = & 
+\begin{cases}
+    \overbrace{
+    \begin{bmatrix}
+        1 & 0 & 1 & 0 & 0 & 0 & 1\\
+        1 & 0 & 0 & 1 & 0 & 0 & 1\\
+        0 & 1 & 0 & 1 & 0 & 1 & 0\\
+        0 & 1 & 0 & 1 & 0 & 0 & 0\\
+        0 & 1 & 0 & 1 & 0 & 0 & 1\\
+        1 & 0 & 1 & 0 & 0 & 0 & 1\\
+        1 & 0 & 1 & 0 & 1 & 0 & 0
+    \end{bmatrix} 
+    }
+\end{cases}
+\end{eqnarray*}
+\caption{The characteristic matrix}
+\label{fig:char_matrix}
+\end{figure}
+
+To save space in memory, we do not save the matrix as it is seen in ~\ref{fig:char_matrix}. We save a list of the pairs that have a 1 in common, as suggested in \cite{book:mmds} p. 81. Worst case, the space consumption would be $O(n \times m)$ \ \footnote{If every role was in every movie}, but since we have a very sparse characteristic matrix, we save a lot of space doing this. \\
 
 Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$. \\
 
-This will surely not fit in memory with the whole dataset, and more sofisticated algorithms are needed.
+This will surely not fit in memory with the whole dataset, so more sofisticated algorithms are needed. \\
 
 \subsubsection{Actual Running Time}
 The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}.
 
-\begin{figure}
+\begin{figure}[!htbp]
     \begin{center}
         \input{plots/naive_at.tex}
         \caption{Naïve Implementation Actual Times}
@@ -123,42 +145,177 @@ The actual running time with the naïve implementation takes too long for our no
 \end{figure}
 
 
-\section{Min Hashing}
-Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $k$, which should be less than the number of rows in the characteristic matrix. 
+\section{MinHashing}
+Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles. \\
 
-Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in ch3). Let $x$ be the rows in which.
+Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
 
+    $x = $ the rows in which the two sets both have a 1. \\
+    $y = $ the rows in which one of the sets have a 1. \\
+    $z = $ the rows in which none of the sets have a 1. \\
 
-The signatures are created in the following way: For every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.\\
+Then the probability of having found a row in $x$, for a random permutation, is
 
-We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in \cite{book:mmds}). \\
+\begin{equation*}
+    \frac{x}{x+y}
+\end{equation*}
 
-We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
+which is equals to the Jaccard similarity of the two sets.
+
+\begin{equation*}
+    \frac{S_1 \cap S_2}{S_1 \cup S_2} = \frac{x}{x+y}
+\end{equation*}
+    
+We simulate $k$ random permutations by creating $k$ number of random hash functions \footnote{We are using universal hashing ($(ax + b) \bmod p$) as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in \cite{book:mmds}).}. All row indices are then hashed with all these hash functions, to simulate a permutation. When this is done, we have created the signature matrix, which is a $k\times n$ matrix, that contains the minimum value of $h(x)$, where $x$ is an element in $S$. See figure ~\ref{fig:signature_matrix}\\
+
+\begin{figure}[!htpb]
+    \begin{eqnarray*}
+     & n \ \text{signatures} \\
+     k \ \text{permutations} = & 
+        \begin{cases}
+        \overbrace{
+        \begin{bmatrix}
+            1 & 1 & 4 & 3 & 3 & 6 & 4\\
+            3 & 3 & 1 & 5 & 3 & 2 & 1\\
+            4 & 3 & 2 & 3 & 3 & 4 & 5\\
+            0 & 1 & 4 & 2 & 2 & 6 & 1\\
+        \end{bmatrix} 
+        } 
+        \end{cases}
+    \end{eqnarray*}
+    \caption{Signature matrix}
+    \label{fig:signature_matrix}
+\end{figure}
+
+We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$ compared to $O(n^2 \cdot m)$ of the naïve solution, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
 
 \subsection{Actual Running Times}
-In figure ~\ref{fig:minhashing_at} the actual running times can be seen. Compared to the running times of the naïve solution, it is a lot faster.
+In figure ~\ref{fig:minhashing_at} the actual running times can be seen.
 
 
-\begin{figure}
-    \begin{center}
-        \input{plots/minhashing_at.tex}
-        \caption{MinHashing Actual Times}
-        \label{fig:minhashing_at}
-    \end{center}
-\end{figure}
+%\begin{figure}[!htpb]
+%    \begin{center}
+%        \input{plots/minhashing_at.tex}
+%        \caption{MinHashing Actual Times}
+%        \label{fig:minhashing_at}
+%    \end{center}
+%\end{figure}
 
 
 \section{Locality Sensitive Hashing (LSH)}
-Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and then we only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then hash the vectors into a large number of buckets. If 2 vectors hash to the same bucket there is a good chance that they are similar. These vectors become candidate pairs, and we only compare candidate pairs for similarity. This leaves us with a significant fraction of the original set of pairs to check. \\
 
-\subsection{How does it work?}
-We take the signatures produced by min hashing and chop them up unto shorter vectors by dividing the total number of rows int $b$ bands of $r$ rows. Total number of rows = $r\times b$ We then hash the vectors into a large number of buckets. If 2 vectors hash to the same bucket there is a good chance that they are similar. These vectors become candidate pairs. This leaves us with a significant fraction of the original set of pairs to check with jaccard similarity.\\
+In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into 2 bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. They are the candidate pairs to be checked for similarity, whereas the red buckets all contain only one or zero signatures, and are not checked for similarity. \\
 
-When choosing the right number of bands $b$ which then gives us the number of rows $r$ it is important to keeping in mind that we want few false negatives/positives but we also want speed. We can compute the probability of a particular pair becoming a candidate pair by using the S-curve equation. $s$ is the probability that 2 signatures become a candidate pair.
+\begin{figure}[!htpb]
+    \begin{center}
+        \begin{tikzpicture}
+            \draw rectangle (14,4);
+            \draw rectangle (7,2);
+            \draw (0,2) rectangle (7,2);
+            \draw (7,0) rectangle (8,4);
+
+            \foreach \x in {0,...,6} \draw (\x+7, 0) rectangle (\x+7+1, 2);
+            \foreach \x in {0,...,6} \draw (\x+7, 2) rectangle (\x+7+1, 4);
+            \foreach \x in {0,...,6} \draw (\x+.5, 4.5) node {$S_\x$};
+
+            \draw (-.5,3) node {$b_0$};
+            \draw (-.5,1) node {$b_1$};
+
+            \draw (10.5, 4.5) node {$\overbrace{\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad}$};
+            \draw (10.5,5.5) node {buckets};
+
+            \draw (0.5,3.5) node {1};
+            \draw (0.5,2.5) node {3};
+            \draw (0.5,1.5) node {4};
+            \draw (0.5,0.5) node {0};
+
+            \draw (1.5,3.5) node {1};
+            \draw (1.5,2.5) node {3};
+            \draw (1.5,1.5) node {3};
+            \draw (1.5,0.5) node {1};
+
+            \draw (2.5,3.5) node {4};
+            \draw (2.5,2.5) node {1};
+            \draw (2.5,1.5) node {2};
+            \draw (2.5,0.5) node {4};
+
+            \draw (3.5,3.5) node {3};
+            \draw (3.5,2.5) node {5};
+            \draw (3.5,1.5) node {3};
+            \draw (3.5,0.5) node {2};
+
+            \draw (4.5,3.5) node {3};
+            \draw (4.5,2.5) node {3};
+            \draw (4.5,1.5) node {3};
+            \draw (4.5,0.5) node {2};
+
+            \draw (5.5,3.5) node {6};
+            \draw (5.5,2.5) node {2};
+            \draw (5.5,1.5) node {4};
+            \draw (5.5,0.5) node {6};
+
+            \draw (6.5,3.5) node {1};
+            \draw (6.5,2.5) node {3};
+            \draw (6.5,1.5) node {3};
+            \draw (6.5,0.5) node {1};
+
+            \foreach \x in {0,...,6} \path[fill=red!30] (7.1+\x,0.1) rectangle (7.9+\x,1.9);
+            \foreach \x in {0,...,6} \path[fill=red!30] (7.1+\x,2.1) rectangle (7.9+\x,3.9);
+
+            \path[fill=green!50] (7.1,2.1) rectangle (7.9,3.9);
+            \path[fill=green!50] (8.1,0.1) rectangle (8.9,1.9);
+            \path[fill=green!50] (10.1,0.1) rectangle (10.9,1.9);
+
+            \draw (7.5,3.5) node {$S_0$};
+            \draw (7.5,3.0) node {$S_1$};
+            \draw (7.5,2.5) node {$S_6$};
+            \draw (8.5,3.5) node {$S_2$};
+            \draw (9.5,3.5) node {$S_3$};
+            \draw (10.5,3.5) node {$S_4$};
+            \draw (11.5,3.5) node {$S_5$};
+
+            \draw (7.5,1.5) node {$S_0$};
+            \draw (8.5,1.5) node {$S_1$};
+            \draw (8.5,1.0) node {$S_6$};
+            \draw (9.5,1.5) node {$S_2$};
+            \draw (10.5,1.5) node {$S_3$};
+            \draw (10.5,1.0) node {$S_4$};
+            \draw (11.5,1.5) node {$S_5$};
+
+        \end{tikzpicture}
+    \caption{LSH buckets and bands}
+    \label{fig:lsh_buckets}
+    \end{center}
+\end{figure}
+
+\subsection{Analysis}
+In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures away, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures become a candidate pair. \\
+
+% Tweak b and r
+% Draw the S-curve
+
+We want as few false negatives/positives as possible. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot.
 
 \begin{equation}
-\text {S-curve equation} = 1 - (1 - s^r)^b 
+    \text {S-curve equation} = 1 - (1 - s^r)^b 
 \end{equation}\\
+
+\begin{figure}[!htpb]
+    \begin{center}
+        \input{plots/scurve.tex}
+        \caption{S-curve}
+        \label{fig:scurve}
+    \end{center}
+\end{figure}
+
+We choose our similarity threshold on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. 
+
+\begin{equation}
+    s = (1/b)^{1/r}
+    \label{eq:s-estimate}
+\end{equation}
+
 
 How much accuracy do we sacrifice in percent?\\
 
@@ -168,7 +325,14 @@ While the use of minhashing reduces the running time of the similarity calculati
 If you were an algorithm which algorithm would you be?
 
 \section{B-bit}
-B-bit minwise hashing is a way to estimate set similarity in a storage efficient way.
+B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing.
+\subsection{The Variance-Space tradeoff}
+(variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean. Min egen husker) So the variance in our project is how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This is a bit fluffy but it can be precisely quantified by the storage factor. 
+
+\begin{equation}
+    \text {Storage factor} = B(b;R,r_1,r_2)
+\end{equation}\\
+
 \section{Odd sketch}
 
 \section{Conclusion}
