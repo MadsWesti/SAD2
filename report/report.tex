@@ -21,6 +21,7 @@
 \usepackage{latexsym}
 \usepackage[T1]{fontenc} % use for allowing < and > in cleartext
 \usepackage{fixltx2e}    % use for textsubscript
+\usepackage[framemethod=tikz]{mdframed}
 
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
@@ -30,6 +31,7 @@
 \bibliographystyle{plain}
 
 \begin{document}
+
 \setlength{\parindent}{0cm}
 \setlength{\unitlength}{1mm}
 \date{December 17th 2014\\ IT University of Copenhagen}
@@ -42,19 +44,27 @@
 \and Mads Westi\\
 \texttt{mwek@itu.dk}}
 \clearpage\maketitle
-\newpage
+
 \thispagestyle{empty}
-\setcounter{page}{0}
+\newpage
 \tableofcontents
+\thispagestyle{empty}
 \newpage
 
+\setcounter{page}{1}
 \section{The method acting problem}
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+Are we changing the problem?
+\end{mdframed}
+
 Acting is hard, the specific branch of method acting\footnote{Actors use this technique to create in themselves the thoughts and feelings of their role} appear even harder. Whenever an actor has finished playing a role, the process of creating a character starts all over. This is time consuming and inefficient, but what if the actor could use parts of his or hers current role? We want to construct an algorithm that gives actors clues to which roles to audition for next, by measuring the similarity between roles. We have dubbed this similarity search problem the "Method acting problem".
 
 
 \section{Implementation}
-We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data.
-
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data. Are we keeping our original problem?
+\end{mdframed}
 We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.
 
 
@@ -315,7 +325,14 @@ While the use of minhashing reduces the running time of the similarity calculati
 If you were an algorithm which algorithm would you be?
 
 \section{B-bit}
-B-bit minwise hashing is a way to estimate set similarity in a more storage efficient way than with min hashing.
+B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing.
+\subsection{The Variance-Space tradeoff}
+(variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean. Min egen husker) So the variance in our project is how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This is a bit fluffy but it can be precisely quantified by the storage factor. 
+
+\begin{equation}
+    \text {Storage factor} = B(b;R,r_1,r_2)
+\end{equation}\\
+
 \section{Odd sketch}
 
 \section{Conclusion}
