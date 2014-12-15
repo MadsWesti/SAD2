@@ -1,7 +1,7 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{listings}
-\usepackage{amsmath}    % need for subequations
+\usepackage{mathtools}   % need for subequations
 \usepackage{graphicx}   % need for figures
 \usepackage{verbatim}   % useful for program listings
 \usepackage{color}      % use if color is used in text
@@ -24,10 +24,11 @@
 
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
-%\usepackage{epic,eepic}
 \usepackage{tikz}
+\usepackage{epstopdf}
 
 \bibliographystyle{plain}
+
 \begin{document}
 \setlength{\parindent}{0cm}
 \setlength{\unitlength}{1mm}
@@ -47,264 +48,135 @@
 \tableofcontents
 \newpage
 
-\section{Project Introduction}
-So you want to make a movie? And you want it to be a movie with high ranking? We have the working hypothesis, that the success of the movie depends solely on what roles appear in the movie. With that in mind, we will look at the IMDB dataset, and find out what the correlation is between high ranking and the roles list of the movies.\\
-
-Maybe it is one specific role that generates the high ranking, or it could be a pair, or triplet of the same roles, that do the trick.\\
-
-In this project, we will try to find the correlation between a high ranking on IMDB and movie roles.\\
-
-The solution to the problem should make room for creating a backend, that could answer these type of questions with some variables. Like: \\
-
-\begin{easylist}[itemize]
-& What 2 roles should be in my Horror movie, if it was the year 1983?
-& What 3 roles should be in my Comedy, if it is the year 2014?
-& What year should I have made an Animation movie with the two roles Policewoman, and Pedestrian?
-\end{easylist} 
-
-The code for our algorithm as well as this report is on Github on \url{https://github.com/MadsWesti/SAD2}. It is coded in Python3 and currently takes approximately 30 seconds to run on a normal laptop. \\
-
-\subsection{Subproblems}
-We have divided the problem into subproblems that we will look at as individual algorithmic problems. Their time complexities will also individually be looked at, and discussed.\\
-
-\begin{easylist}[itemize]
-& Make a data cleaning algorithm, that can link similarities (‘Police’, ‘Policewoman’, ‘Policeman’)
-& Remove meta-characters like ‘Herself’, ‘Himself’, ‘Narrator’, etc…
-& Put the role list through a thesaurus (for finding synonyms)
-& What are the tendency curves for all years? (to see what roles are in, out, or steady.)
-& What are the top role pairs instead of single roles?
-\end{easylist}
-
-\subsection{Algorithmic Solution}
-We can create a simple solution, but it would probably not be very fast on a normal computer, so to optimize we make a streaming solution of the problem. Although one where the total length of the stream is known.\\
-
-\subsection{Project Extension}
-Due to limitations in memory, an extension to the streaming solution could be made. One that does not know the length of the stream beforehand.\\
-
-We could find a more sophisticated algorithm in the course literature. This could help us get a better time complexity, but we must be sure about what we sacrifice in accuracy.\\
-
-\subsection{Subproblems in the Project Extension}
-\begin{easylist}[itemize]
-& What are the top role triplets instead of pairs or singletons?
-& Can we use the heavy hitters principle?
-& Should we consider using MapReduce?
-\end{easylist}
+\section{The method acting problem}
+Acting is hard, the specific branch of method acting\footnote{Actors use this technique to create in themselves the thoughts and feelings of their role} appear even harder. Whenever an actor has finished playing a role, the process of creating a character starts all over. This is time consuming and inefficient, but what if the actor could use parts of his or hers current role? We want to construct an algorithm that gives actors clues to which roles to audition for next, by measuring the similarity between roles. We have dubbed this similarity search problem the "Method acting problem".
 
 
-\section{Naïve solution to problem}
-\subsection{Metrics for rankings}
-The rankings in the IMDB database are within the interval 1 to 10. For every role, we will calculate a rank for that role in the following way:\\
+\section{Implementation}
+We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data.
 
-Rank = $X \cdot \frac{n}{n+k} + C \cdot \frac{k}{n+k}$ \\ \\
-
-where: \\
-$X =$ average rating for the movie that the role appeared in\\
-$n =$ number of movies that the role appeared in\\
-$k =$ minimum number of movies required to be listed in the top 250\\
-$C =$ the mean ranking across the entire database\\
-
-This rank is the same weighted rank equation, that IMDB uses to rank their movies. \href{ftp://ftp.sunet.se/pub/tv+movies/imdb/ratings.list.gz}{IMDB ratings database} \\
-
-\begin{easylist}[itemize]
-& maybe a couple of lines about why this metric should be used, and if it’s a bad idea, and why:
-& Compared to plain average
-& Compared to maybe our own scale
-\end{easylist}
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.
 
 
-\section{Simple solution to the stated problem}
-At first we create a simple solution to the problem. One that does not have a complicated algorithm, but also runs through all the data. We then add the subproblems on top of this and analyze them individually.\\
+\subsection{Measuring similarity}
+Since a role is represented as a set movies, we can measure the similarity between roles using the Jaccard similarity, where the similarity between two sets $S_1$ and $S_2$.
+
+\begin{equation}
+Sim(S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
+\end{equation}
+The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, and it is 0 if the sets are disjoint.
 
 
-\subsection{Adding subproblems}
+\subsection{Measuring Running Time}
+For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. Though, if the running time is taking longer than out patience permits, we will just put in how long we waited, and note that we did not run it through.
+
+We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many roles, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 57,736 distinct movies, and 553,263 distinct roles (not counting the movies without any roles and roles with nonexisting movie-ids).
+
+But even though there are 10 more roles per movies. Many of these roles are only in one movie, and only few roles are in many movies. If we calculate the average number of movies, that a role appears in, it is somewhere between 1.2 and 2.0, depending on what our cut-off rank is (see figure ~\ref{fig:sparsenesscutoff}. We have defined our minimum rank cutoff to movies with at least 7.0 in rank, which corresponds to an average of 1.7 movies per role. This has influence on the characteristic matrix, that we create when parsing.
+
+This will be taken into account when creating our random dummy data.
+
+\begin{figure}
+    \begin{center}
+        \input{plots/ones_per_role.tex}
+        \caption{Sparseness with cutoff}
+        \label{fig:sparsenesscutoff}
+    \end{center}
+\end{figure}
+
+\subsection{Naïve Implementation}
+
+\subsubsection{Data representation}
+A role is represented as a list of movies\footnote{Corresponding to the ids of the movies, which is integers} the specific role appear in.
+
+\begin{equation}
+r_1 = \{m_1, m_2, m_3, \ldots , m_i\}
+\end{equation}
+
+The data is stored in a characteristic matrix, where the rows are movies and the columns are roles.
+\begin{equation}
+movies \times roles = 
+\begin{bmatrix}
+    1 & 0 & 1 & 0\\
+    1 & 0 & 0 & 1\\
+    0 & 1 & 0 & 1\\
+    0 & 1 & 0 & 1\\
+    0 & 1 & 0 & 1\\
+    1 & 0 & 1 & 0\\
+    1 & 0 & 1 & 0
+\end{bmatrix}
+\end{equation}
+
+Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$. \\
+
+This will surely not fit in memory with the whole dataset, and more sofisticated algorithms are needed.
+
+\subsubsection{Actual Running Time}
+The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}.
+
+\begin{figure}
+    \begin{center}
+        \input{plots/naive_at.tex}
+        \caption{Naïve Implementation Actual Times}
+        \label{fig:naive_at}
+    \end{center}
+\end{figure}
 
 
-\subsubsection{Data Cleaning Algorithm}
-By looking at the data, and what roles are most frequently used, we have gathered information about some unwanted roles, and some cleaning, that we will have to do.\\
+\section{Min Hashing}
+Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $k$, which should be less than the number of rows in the characteristic matrix. 
 
-For every genre, there exists the roles ‘Himself’, ‘Herself’, ‘Narrator’, and ‘’. We are not interested in these, since they all represent a different entity, and if we come across one of these, we simply skip it.\\
-
-Also, there are many roles that a present multiple times in the same move, and thus will have a rolename with a numbered suffix. eg. ‘Policeman \#1’. These role names will have to be counted as ‘Policeman’, and thus the suffix is stripped.\\
-
-\begin{easylist}[itemize]
-& String similarity: 
-&& “Policewoman” vs “Policeman” 
-&& “Nurse” vs. “Horse”
-&& Make a weighted value for every 2 nearly similar words.
-&&&  if abs(str1.length-str2.length) $<$  3, then run similarity\_check(str1, str2)
-&&&  Maybe we can use the protein-alikeness algorithm from SAD1 course.
-&&&  Maybe use Jaccard to match two words. 
-\end{easylist}
+Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in ch3). Let $x$ be the rows in which.
 
 
-\subsubsection{Synonyms}
+The signatures are created in the following way: For every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.\\
 
-\begin{easylist}[itemize]
-& Check every role for synonyms.
-& Find out how to check for ambiguity.
-&& “Police” vs “Pigs”
-&&& Could be same, but might not
-&& “Policeman” vs “Policewoman”
-&&& Does the gender matter in our algorithm, or do we not care.
-& Maybe it makes the data worse, or less reliable
-&& So should we include it?
-& Link to an open thesaurus: \href{http://wordnet.princeton.edu/wordnet/download/current-version/}{princeton.edu}
-\end{easylist}
+We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in \cite{book:mmds}). \\
 
+We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
 
-\subsubsection{Tendency curves over the years}
-
-\begin{easylist}[itemize]
-& Make the role rank for every year
-& Make definitions on when roles are on the rise, or the opposite, or steady every year.
-&& Maybe we just have to look 5 years back, or maybe we should consider all years
-& Consider exporting the data into a graphable format, for visualization
-& Maybe cluster years together in decades? or 5-year clusters?
-Role pairs
-& Discuss how much the complexity rises
-& Are there roles in the singleton solution that do not appear in these pairs?
-&& roles that only work alone.
-\end{easylist}
-
-\subsubsection{Pairs in stead of Singletons}
-
-\begin{easylist}[itemize]
-& Take into account, doublegangers
-&& Sort the tuples alphabetically, to avoid this
-&& Find a reference to this in one of the slides.
-& Show how much more space it fills
-&& Show the aggregates for the different data structures
-&&& \{movie1: [role1, role2, role3, role4], ranking\}
-&&& \{role1: \{role2: [rank1, rank2, rank3]\}\}
-&& Say how it sort of represents a graph.. draw the graph.
-\end{easylist}
-
-For any given simple undirected complete graph with $n$ vertices, there are $\frac{n(n-1)}{2} \Leftrightarrow \frac{n^2-n}{2}$ edges. If all the weights on the edges are equivalent to a set of the movies that link them, the space complexity will be $O (n^2 \cdot m)$. Where $m$ is the number of movies. \\
-
-We create a toy example with 3 movies $(m_1, m_2, m_3)$, and 6 roles $(r_1, r_2, r_3, r_4, r_5, r_6)$. The overlap can be seen in figure \ref{fig:venn}. We save the data in two different structures in our algorithm. The first one is a dictionary, which contains the movies as indices and a list of roles as the value, see figure \ref{fig:aggregate_movies} for an aggregate. The data is thereafter converted into another dictionary, which are more like a graph type structure, see figure \ref{fig:aggregate_roles}. \\
-
-The space complexity for the first aggregate is $O (m \cdot r)$, and the space complexity for the second aggregate is $ \sim (\frac{n^2-2}{2} \cdot m) \Rightarrow O (n^2 m)$.
+\subsection{Actual Running Times}
+In figure ~\ref{fig:minhashing_at} the actual running times can be seen. Compared to the running times of the naïve solution, it is a lot faster.
 
 
 \begin{figure}
-\begin{center}
-\begin{tikzpicture}
-    \def\circleone{(90:1.75) circle (2.5)};
-    \def\circletwo{(210:1.75) circle (2.5)};
-    \def\circlethree{(330:1.75) circle (2.5)};
-    \draw node {$r_1\ \ r_3$};
-    \draw \circleone node[above] {$r_2$};
-    \draw \circletwo node[below left] {$r_6$};
-    \draw \circlethree node[below right] {$r_5$};
-    \draw (270:1.75) node {$r_4$};
-    \draw (90:4.5) node {$m_1$};
-    \draw (210:4.7) node {$m_2$};
-    \draw (330:4.7) node {$m_3$};
-    \draw \circletwo;
-    \draw \circlethree;
-    \draw (-5,-5) rectangle (5,5);
-\end{tikzpicture}
-\caption{A venn diagram of the toy data}
-\label{fig:venn}
-\end{center}
+    \begin{center}
+        \input{plots/minhashing_at.tex}
+        \caption{MinHashing Actual Times}
+        \label{fig:minhashing_at}
+    \end{center}
 \end{figure}
 
-\begin{figure}
-\begin{center}
-\begin{tikzpicture}
-    \draw rectangle (1,1);
-    \draw rectangle (1,2);
-    \draw rectangle (1,3);
-    \draw rectangle (5,1);
-    \draw rectangle (5,2);
-    \draw rectangle (5,3);
 
-    \draw (.5,2.5) node {$m_1$};
-    \draw (.5,1.5) node {$m_2$};
-    \draw (.5,.5) node {$m_3$};
+\section{Locality Sensitive Hashing (LSH)}
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and then we only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
 
-    \draw (1.5,2.5) node [right] {$[r_1, r_2, r_3]$};
-    \draw (1.5,1.5) node [right] {$[r_1, r_3, r_4, r_5]$};
-    \draw (1.5,.5) node [right] {$[r_1, r_3, r_4, r_6]$};
-\end{tikzpicture}
-\caption{Aggregate for the first data structure}
-\label{fig:aggregate_movies}
-\end{center}
-\end{figure}
+\subsection{How does it work?}
+We take the signatures produced by min hashing and chop them up unto shorter vectors by dividing the total number of rows int $b$ bands of $r$ rows. Total number of rows = $r\times b$ We then hash the vectors into a large number of buckets. If 2 vectors hash to the same bucket there is a good chance that they are similar. These vectors become candidate pairs. This leaves us with a significant fraction of the original set of pairs to check with jaccard similarity.\\
 
-\begin{figure}
-\begin{center}
-\begin{tikzpicture}
-    \draw rectangle (5,11);
+When choosing the right number of bands $b$ which then gives us the number of rows $r$ it is important to keeping in mind that we want few false negatives/positives but we also want speed. We can compute the probability of a particular pair becoming a candidate pair by using the S-curve equation. $s$ is the probability that 2 signatures become a candidate pair.
 
-    \draw (0,0) rectangle (1,2);
-    \draw (1,2) rectangle (1,5);
-    \draw (1,5) rectangle (1,6);
-    \draw (1, 6) rectangle (1,11);
+\begin{equation}
+\text {S-curve equation} = 1 - (1 - s^r)^b 
+\end{equation}\\
 
-    \draw rectangle (5,2);
-    \draw rectangle (5,5);
-    \draw rectangle (5,6);
-    \draw rectangle (5,11);
+How much accuracy do we sacrifice in percent?\\
 
-    \foreach \x in {0,...,10} \draw (1,\x) rectangle (2,\x+1);
-    \foreach \x in {0,...,10} \draw (2,\x) rectangle (5,\x+1);
+Run time analysis/space complexity
+While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparision.\\
 
-    \draw (.5,10.5) node {$r_1$};
-    \draw (.5,5.5) node {$r_2$};
-    \draw (.5,4.5) node {$r_3$};
-    \draw (.5,1.5) node {$r_4$};
-    
-    \draw (1.5,10.5) node {$r_2$};
-    \draw (1.5,9.5) node {$r_3$};
-    \draw (1.5,8.5) node {$r_4$};
-    \draw (1.5,7.5) node {$r_5$};
-    \draw (1.5,6.5) node {$r_6$};
-    \draw (1.5,5.5) node {$r_3$};
-    \draw (1.5,4.5) node {$r_4$};
-    \draw (1.5,3.5) node {$r_5$};
-    \draw (1.5,2.5) node {$r_6$};
-    \draw (1.5,1.5) node {$r_5$};
-    \draw (1.5,0.5) node {$r_6$};
+If you were an algorithm which algorithm would you be?
 
-    \draw (2.5,10.5) node [right] {$[m_1]$};
-    \draw (2.5,9.5) node [right] {$[m_1, m_2, m_3]$};
-    \draw (2.5,8.5) node [right] {$[m_2, m_3]$};
-    \draw (2.5,7.5) node [right] {$[m_2]$};
-    \draw (2.5,6.5) node [right] {$[m_3]$};
-    \draw (2.5,5.5) node [right] {$[m_1]$};
-    \draw (2.5,4.5) node [right] {$[m_2, m_3]$};
-    \draw (2.5,3.5) node [right] {$[m_2]$};
-    \draw (2.5,2.5) node [right] {$[m_3]$};
-    \draw (2.5,1.5) node [right] {$[m_2]$};
-    \draw (2.5,0.5) node [right] {$[m_3]$};
-\end{tikzpicture}
-\caption{Aggregate for the second data structure.}
-\label{fig:aggregate_roles}
-\end{center}
-\end{figure}
-
-\subsection{Space/time analysis}
-
-\begin{easylist}[itemize]
-& State complexity for all the subproblems
-&& so all subproblems should be easily distinguishable in the code eg. have their own methods.
-& Which subproblem algorithm has the largest space/time complexity
-&& Where should we set in, to make it faster?
-& Do we already sacrifice accuracy somewhere?
-\end{easylist}
-
-
-\section{Extended solution to problem}
-
-\begin{easylist}[itemize]
-& Choose a streaming solution with unknown stream length 
-& Consider MapReduce - discuss why, and how.
-\end{easylist}
-
-
-\section{Discussion}
-
+\section{B-bit}
+B-bit minwise hashing is a way to estimate set similarity in a storage efficient way.
+\section{Odd sketch}
 
 \section{Conclusion}
+\newpage
+\bibliography{bibliography}
 \end{document}
+
+
+
+
+
