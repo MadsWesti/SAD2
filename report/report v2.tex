@@ -106,7 +106,10 @@ movies \times roles =
     1 & 0 & 1 & 0
 \end{bmatrix}
 \end{equation}
+
 Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$. \\
+
+This will surely not fit in memory with the whole dataset, and more sofisticated algorithms are needed.
 
 \subsubsection{Actual Running Time}
 The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}.
@@ -121,11 +124,14 @@ The actual running time with the naïve implementation takes too long for our no
 
 
 \section{Min Hashing}
-Since the permutation of such a large matrix is infeasible, we create $k$ hash functions. The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction of space of the original set. The signatures give an approximation of the data and isn't exactly accurate.\\
+Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $k$, which should be less than the number of rows in the characteristic matrix. 
+
+Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in ch3). Let $x$ be the rows in which.
+
 
 The signatures are created in the following way: For every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.\\
 
-We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in ch3). How did we choose our $k$? \\
+We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in ch3). \\
 
 We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
 
