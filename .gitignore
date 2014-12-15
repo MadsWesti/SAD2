@@ -87,3 +87,6 @@ target/
 *.mtc1
 *.out
 *.synctex.gz
+
+data/
+dummy/

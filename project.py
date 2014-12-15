@@ -5,21 +5,25 @@ import time
 
 # CONFIGURATION
 #filename = "imdb-r.txt"
-filename = "rnd/rnd_400_4k.txt"
+filename = "dummy.txt"
 min_rank = 0.0
 
 ## Naive
 naive = False
 
 ## MinHashing
-minhash = True
-k = 10 # hash functions
+minhash = False
+k = 3 # hash functions
 
 ## LSH
 lsh = False
 b = 20 # bands
-bu = 1 # buckets
+bu = 4 # buckets
 ### Remember to set the k value in MinHashing
+
+#bbit
+bbit = True
+b = 1
 
 
 def get_first_prime_larger_than(N):
@@ -227,7 +231,32 @@ def approximate_jaccard_minhash(matrix, movies, roles, k):
     for (r1, r2) in similarity:
         similarity[r1, r2] /= float(k)
     return similarity
+
+def approximate_jaccard_minhash_bbit(matrix, movies, roles, k, b):
+    similarity = {}
+    n = len(roles)
+    m = len(movies)
+    signature_matrix, _ = create_sig_matrix(matrix, m, n, k)
     
+    for i in range(0, len(signature_matrix)):
+        for j in range(0, len(signature_matrix)):
+            signature_matrix[i][j] = convert_to_bbit(signature_matrix[i][j],b)  
+
+    for i in range(0, n):
+        for j in range(i + 1, n):
+            similarity[roles[i],roles[j]] = 0.0
+            for pi in range(0, k):
+                if signature_matrix[pi][i] == signature_matrix[pi][j]:
+                    similarity[roles[i],roles[j]] += 1
+    
+    #calculating fractions                    
+    for (r1, r2) in similarity:
+        similarity[r1, r2] /= float(k)
+    return similarity 
+
+def convert_to_bbit(value,b):
+    return bin(value)[-b:]
+
 
 print("Parsing data - " + filename)
 start = time.time()
@@ -264,6 +293,15 @@ if lsh:
     print("   Max value is: " + str(max_value))
     print("   took "+str(time.time() - start)+" seconds\n")
 
+if bbit:
+    print("Running b-bit")
+    print("   k (hash functions) = " + str(k))
+    jaccard_approx = {}
+    start = time.time()
+    jaccard_approx = approximate_jaccard_minhash_bbit(matrix, movies, roles, k, b)
+    max_value = max(jaccard_approx.values())
+    print("   Max value is: " + str(max_value))
+    print("   took "+str(time.time() - start)+" seconds\n")
 
 """
 for (r1,r2) in jaccard:
