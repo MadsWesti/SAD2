@@ -56,13 +56,6 @@ Acting is hard, the specific branch of method acting\footnote{Actors use this te
 We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data.
 
 
-\subsection{Data representation}
-A role is represented as a list of movies\footnote{Corresponding to the ids of the movies, which is integers} the specific role appear in.
-
-\begin{equation}
-r_1 = \{m_1, m_2, m_3, \ldots , m_i\}
-\end{equation}
-
 \subsection{Measuring similarity}
 Since a role is represented as a set movies, we can measure the similarity between roles using the Jaccard similarity, where the similarity between two sets $S_1$ and $S_2$.
 \begin{equation}
@@ -97,6 +90,13 @@ This will be taken into account when creating our random dummy data.
 \end{figure}
 
 \subsection{Naïve Implementation}
+
+\subsection{Data representation}
+A role is represented as a list of movies\footnote{Corresponding to the ids of the movies, which is integers} the specific role appear in.
+
+\begin{equation}
+r_1 = \{m_1, m_2, m_3, \ldots , m_i\}
+\end{equation}
 
 The data is stored in a characteristic matrix, where the rows are movies and the columns are roles.
 \begin{equation}
@@ -153,7 +153,7 @@ While the use of minhashing reduces the running time of the similarity calculati
 If you were an algorithm which algorithm would you be?
 
 \section{B-bit}
-B.bit minwise hashing is a way to estimate set similarity in a storage efficient way.
+B-bit minwise hashing is a way to estimate set similarity in a storage efficient way.
 \section{Odd sketch}
 
 \section{Conclusion}
