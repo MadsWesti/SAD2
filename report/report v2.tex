@@ -76,7 +76,27 @@ For every new implementation, we will measure the actual running time. It will b
 
 We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many roles, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 57,736 distinct movies, and 553,263 distinct roles (not counting the movies without any roles and roles with nonexisting movie-ids).
 
-\subsection{Naive Implementation}
+But even though there are 10 more roles per movies. Many of these roles are only in one movie, and only few roles are in many movies, see figure \ref{fig:sparseness} for a graphical representation of the data. If we calculate the average number of movies, that a role appears in, it is somewhere between 1.2 and 2.0, depending on what our cut-off rank is (see figure ~\ref{fig:sparsenesscutoff}. We have defined our minimum rank cutoff to movies with at least 7.0 in rank, which corresponds to an average of 1.7 movies per role. This has influence on the characteristic matrix, that we create when parsing.
+
+This will be taken into account when creating our random dummy data.
+
+\begin{figure}
+    \begin{center}
+        %\input{plots/naive_at.tex}
+        \caption{Sparseness}
+        \label{fig:sparseness}
+    \end{center}
+\end{figure}
+
+\begin{figure}
+    \begin{center}
+        \input{plots/ones_per_role.tex}
+        \caption{Sparseness with cutoff}
+        \label{fig:sparsenesscutoff}
+    \end{center}
+\end{figure}
+
+\subsection{Naïve Implementation}
 
 The data is stored in a characteristic matrix, where the rows are movies and the columns are roles.
 \begin{equation}
@@ -94,34 +114,39 @@ movies \times roles =
 Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$. \\
 
 \subsubsection{Actual Running Time}
-The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. We ran the implementation on random dummy datasets
+The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}.
 
 \begin{figure}
     \begin{center}
-        \input{plots/naive_actual_time.tex}
-        \label{graph:naive_actual_time}
+        \input{plots/naive_at.tex}
+        \caption{Naïve Implementation Actual Times}
+        \label{fig:naive_at}
     \end{center}
 \end{figure}
 
 \section{Min Hashing}
-Since the permutation of such a large matrix is infeasible, we create $k$ hash functions. The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.
+Since the permutation of such a large matrix is infeasible, we create $k$ hash functions. The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.\\
 
-The signatures are created in the following way: For every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.
+The signatures are created in the following way: For every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.\\
 
 We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in ch3). How did we choose our $k$? \\
 
 We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
 
 \section{Locality Sensitive Hashing (LSH)}
-Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and we don’t need to inspect all pairs. We only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and then we only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
 
-What is an effective way of hashing keeping in mind that we want few false negatives/ positives? 
+What is an effective way of hashing keeping in mind that we want few false negatives/ positives?\\
 
-How many bands do we have? How many rows per band? How did we choose these numbers? Accuracy test. 
+How many bands do we have? How many rows per band? How did we choose these numbers? Accuracy test. Check p. 89 and 90 S-curve S-curve equation = $1 - (1 - s^5)^{20}$\\ 
 
-What do we sacrifice?
+
+How much accuracy do we sacrifice in percent?\\
+
 Run time analysis/space complexity
-While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resluting in candidate pairs for comparision.
+While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparision.\\
+
+If you were an algorithm which algorithm would you be?
 
 \section{B-bit}
 
