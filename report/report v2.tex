@@ -124,6 +124,7 @@ The actual running time with the naïve implementation takes too long for our no
     \end{center}
 \end{figure}
 
+
 \section{Min Hashing}
 Since the permutation of such a large matrix is infeasible, we create $k$ hash functions. The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.\\
 
@@ -132,6 +133,19 @@ The signatures are created in the following way: For every row in the characteri
 We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in ch3). How did we choose our $k$? \\
 
 We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$.
+
+\subsection{Actual Running Times}
+In figure ~\ref{fig:minhashing_at} the actual running times can be seen. Compared to the running times of the naïve solution, it is a lot faster.
+
+
+\begin{figure}
+    \begin{center}
+        \input{plots/minhashing_at.tex}
+        \caption{MinHashing Actual Times}
+        \label{fig:minhashing_at}
+    \end{center}
+\end{figure}
+
 
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and then we only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
