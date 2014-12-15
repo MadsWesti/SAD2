@@ -21,6 +21,7 @@
 \usepackage{latexsym}
 \usepackage[T1]{fontenc} % use for allowing < and > in cleartext
 \usepackage{fixltx2e}    % use for textsubscript
+\usepackage[framemethod=tikz]{mdframed}
 
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
@@ -30,6 +31,7 @@
 \bibliographystyle{plain}
 
 \begin{document}
+
 \setlength{\parindent}{0cm}
 \setlength{\unitlength}{1mm}
 \date{December 17th 2014\\ IT University of Copenhagen}
@@ -42,19 +44,27 @@
 \and Mads Westi\\
 \texttt{mwek@itu.dk}}
 \clearpage\maketitle
-\newpage
+
 \thispagestyle{empty}
-\setcounter{page}{0}
+\newpage
 \tableofcontents
+\thispagestyle{empty}
 \newpage
 
+\setcounter{page}{1}
 \section{The method acting problem}
+
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+Are we changing the problem?
+\end{mdframed}
+
 Acting is hard, the specific branch of method acting\footnote{Actors use this technique to create in themselves the thoughts and feelings of their role} appear even harder. Whenever an actor has finished playing a role, the process of creating a character starts all over. This is time consuming and inefficient, but what if the actor could use parts of his or hers current role? We want to construct an algorithm that gives actors clues to which roles to audition for next, by measuring the similarity between roles. We have dubbed this similarity search problem the "Method acting problem".
 
 
 \section{Implementation}
-We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data.
-
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data. Are we keeping our original problem?
+\end{mdframed}
 We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.
 
 
