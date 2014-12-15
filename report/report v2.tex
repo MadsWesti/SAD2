@@ -136,11 +136,13 @@ We still have to permute all pairs of roles, but the number of comparisons is re
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and then we only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
 
-What is an effective way of hashing keeping in mind that we want few false negatives/ positives?\\
+How does it work? We take the signatures produced by min hashing and chop them up unto shorter vectors by dividing the total number of rows int $b$ bands of $r$ rows. Total number of rows = $r\times b$ We then hash the vectors into a large number of buckets. If 2 vectors hash to the same bucket there is a good chance that they are similar. These vectors become candidate pairs. This leaves us with a significant fraction of the original set of pairs to check with jaccard similarity.  \\
+When choosing the right number of bands $b$ which then gives us the number of rows $r$ it is important to keeping in mind that we want few false negatives/positives but we also want speed. We can compute the probability of a particular pair becoming a candidate pair by using the S-curve equation.
 
-How many bands do we have? How many rows per band? How did we choose these numbers? Accuracy test. Check p. 89 and 90 S-curve S-curve equation = $1 - (1 - s^5)^{20}$\\ 
-
-
+\begin{equation}
+\text {S-curve equation} = 1 - (1 - s^5)^{20}\\ 
+\end{equation}
+hej med dig
 How much accuracy do we sacrifice in percent?\\
 
 Run time analysis/space complexity
