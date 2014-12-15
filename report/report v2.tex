@@ -125,9 +125,9 @@ The actual running time with the naïve implementation takes too long for our no
 \end{figure}
 
 \section{Min Hashing}
-Since the permutation of such a large matrix is infeasible, we create $k$ hash functions. The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.
+Since the permutation of such a large matrix is infeasible, we create $k$ hash functions. The idea is to take the large sets and represent them as signatures. The signiatures take up a fraction af the space of the original set. The signatures give an approximation of the data and isn't exactly accurate.\\
 
-The signatures are created in the following way: For every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.
+The signatures are created in the following way: For every row in the characteristic matrix run all the hash functions for the row index. When this is done, we have created the signature matrix, which is a $k\times n$ matrix.\\
 
 We are using universal hashing\footnote{$(ax + b) \bmod p$} as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in ch3). How did we choose our $k$? \\
 
@@ -136,13 +136,17 @@ We still have to permute all pairs of roles, but the number of comparisons is re
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large LSH is an option to use. The idea is that similar items hash to the same bucket and then we only check the similarity of items in the same bucket. From the MinHash algorithm we have MinHash signatures. For each hashing we take the union of the sets of each hash function.
 
-What is an effective way of hashing keeping in mind that we want few false negatives/ positives? 
+What is an effective way of hashing keeping in mind that we want few false negatives/ positives?\\
 
-How many bands do we have? How many rows per band? How did we choose these numbers? Accuracy test. 
+How many bands do we have? How many rows per band? How did we choose these numbers? Accuracy test. Check p. 89 and 90 S-curve S-curve equation = $1 - (1 - s^5)^{20}$\\ 
 
-What do we sacrifice?
+
+How much accuracy do we sacrifice in percent?\\
+
 Run time analysis/space complexity
-While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resluting in candidate pairs for comparision.
+While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparision.\\
+
+If you were an algorithm which algorithm would you be?
 
 \section{B-bit}
 
