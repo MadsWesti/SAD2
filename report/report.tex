@@ -52,13 +52,13 @@
 \newpage
 
 \setcounter{page}{1}
-\section{The method acting problem}
+\section{Finding a Similar Actor}
 
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-Are we changing the problem?
-\end{mdframed}
+Say you want to make a movie with a specific actor as the lead role, but the actor is unavailable. You have already written the script, and found all the other actors. The only thing missing is the lead actor. \\
 
-Acting is hard, the specific branch of method acting\footnote{Actors use this technique to create in themselves the thoughts and feelings of their role} appear even harder. Whenever an actor has finished playing a role, the process of creating a character starts all over. This is time consuming and inefficient, but what if the actor could use parts of his or hers current role? We want to construct an algorithm that gives actors clues to which roles to audition for next, by measuring the similarity between roles. We have dubbed this similarity search problem the "Method acting problem".
+You find a similar actor. You find the most similar actor. And for this we must assume that, what defines an actor, is what movies it appears in. So you find the actor that has the most movies in common with your intended actor, and use that actor instead. \\
+
+For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster.
 
 
 \section{Implementation}
@@ -205,7 +205,9 @@ In figure ~\ref{fig:minhashing_at} the actual running times can be seen.
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then hash the vectors into a large number of buckets. If 2 vectors hash to the same bucket there is a good chance that they are similar. These vectors become candidate pairs, and we only compare candidate pairs for similarity. This leaves us with a significant fraction of the original set of pairs to check. \\
 
-In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into 2 bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. They are the candidate pairs to be checked for similarity, whereas the red buckets all contain only one or zero signatures, and are not checked for similarity. \\
+In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into 2 bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. If a signature is in one or more buckets it is a candidate signature to be checked for similarity, whereas if a signature is only in red buckets, which have only one or zero signatures, it is discarded as a candidate signature. \\
+
+So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded signatures are $S_2, S_5$.
 
 \begin{figure}[!htpb]
     \begin{center}
@@ -292,10 +294,7 @@ In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been disse
 \subsection{Analysis}
 In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures away, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures become a candidate pair. \\
 
-% Tweak b and r
-% Draw the S-curve
-
-We want as few false negatives/positives as possible. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot.
+In some problems, it is important to have no false negatives, or no false positives. In these problems the threshold can be chosen lower or higher, to match the wanted ratio. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot.
 
 \begin{equation}
     \text {S-curve equation} = 1 - (1 - s^r)^b 
@@ -309,7 +308,7 @@ We want as few false negatives/positives as possible. We can plot the probabilit
     \end{center}
 \end{figure}
 
-We choose our similarity threshold on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. 
+We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. We then use equation \ref{eq:s-estimate}, and set $r$, and $b$ accordingly, to find an $s$ value close to our threshold $t$.
 
 \begin{equation}
     s = (1/b)^{1/r}
@@ -317,12 +316,8 @@ We choose our similarity threshold on the x-axis of the S-curve graph. If we wan
 \end{equation}
 
 
-How much accuracy do we sacrifice in percent?\\
 
-Run time analysis/space complexity
-While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparision.\\
-
-If you were an algorithm which algorithm would you be?
+%How much accuracy do we sacrifice in percent?\\
 
 \section{B-bit}
 B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing.
