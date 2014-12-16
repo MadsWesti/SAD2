@@ -58,19 +58,22 @@ Say you want to make a movie with a specific actor as the lead role, but the act
 
 You find a similar actor. You find the most similar actor. And for this we must assume that, what defines an actor, is what movies it appears in. So you find the actor that has the most movies in common with your intended actor, and use that actor instead. \\
 
-The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies.\\
+The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies. This gives us $2.6\cdot 10^{17}$ comparisons!\\
 
 For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster without loosing to much accuracy.
 
 
 \section{Implementation}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-We would like to find a similar actor to replace our unavailable lead actor. To do this we want to find 
-\end{mdframed}
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using.\\
+%\end{mdframed}
 
 \todo{We are using Python}
+We are using Python to implement our algorithms as this is our language of choice. We ran into some problems with Python which we will discuss later in the report.\\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report. For each algorithm we will explain how it works and its application and then go on to explain how we implemented it. We then explain the time and space complexity. We finish each section by discussing the results we achieved.\\
+
+
 
 
 \subsection{Measuring similarity}
@@ -375,16 +378,16 @@ For every band, two signatures have about $1 - (\left(1-s^r \right)$ chance of b
 \section{B-bit}
 B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing alone. It is a modification for min hashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
-In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. \\
+In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 28 bytes}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. \\
 
-though, if we were able to store one object using only 1 bit, we would only use as many bits, as we had object. %Currently, our objects 
+Though, if we were able to store one object using only $1$ bit, we would only use as many bits, as we had object. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 28 = 224$ bits, we would at most use $1/s = 1/224$ of the original space. Notice that the time complexity is still the same. \\
 
-\todo{Udregning over hvad vi kunne spare}
+Say we had some hardware that could do boolean comparisons faster than integer comparisons, then a b-bit implementation could utilize this functionality. But that is out of scope of this course. \\
 
 \subsection{The Variance-Space tradeoff}
 \todo{variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean.}
 
-The variance in our project is a measure of how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This is a bit fluffy but it can be precisely quantified by the storage factor. 
+The variance in our project is a measure of how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This can be precisely quantified by the storage factor. 
 
 \begin{equation}
     \text {Storage factor} = B(b;R,r_1,r_2)
