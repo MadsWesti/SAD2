@@ -108,7 +108,7 @@ For each algorithm we will explain how it works and its different applications a
 
 
 \subsection{Measuring similarity}
-An actor has starred in a series of movies. This set of movies we will call $S_1$. Another actor has been in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, and it is 0 if the sets are disjoint.
+An actor has starred in a series of movies. This set of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint.
 
 \begin{equation}
 \text{Jaccard similarity index} (S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
@@ -123,7 +123,7 @@ For every new implementation, we will measure the actual running time. It will b
 
 We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many actors, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 63,594 distinct movies, and 460,428 distinct actors (not counting the movies with nonexisting movie-ids, and also not counting the movies with a ranking of \emph{NULL}).\\
 
-But even though there are 10 more actors per movies. Many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that a role appears in, it is about 3. This will be taken into account when creating the dummy data. \\
+But even though there are 10 more actors per movies many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that a role appears in, it is about 3. This will be taken into account when creating the dummy data. \\
 
 One could argue that we could use a minimum rank as a cutoff on the original dataset, to simulate dummy data. But when we generate it randomly ourselves, we have (almost) full control over how many objects are created. \\
 
@@ -147,13 +147,13 @@ Instead of storing the actors as sets, for reasons that become more apparent in 
 \begin{cases}
     \overbrace{
     \begin{bmatrix}
-        1 & 0 & 1 & 0 \\
-        1 & 0 & 0 & 1 \\
-        0 & 1 & 0 & 1 \\
-        0 & 1 & 0 & 1 \\
-        0 & 1 & 0 & 1 \\
-        1 & 0 & 1 & 0 \\
-        1 & 0 & 1 & 0
+        1 & 0 & 1 & 0 & 0 & 0 & 1\\
+        1 & 0 & 0 & 1 & 0 & 0 & 1\\
+        0 & 1 & 0 & 1 & 0 & 1 & 0\\
+        0 & 1 & 0 & 1 & 0 & 0 & 0\\
+        0 & 1 & 0 & 1 & 0 & 0 & 1\\
+        1 & 0 & 1 & 0 & 0 & 0 & 1\\
+        1 & 0 & 1 & 0 & 1 & 0 & 0
     \end{bmatrix} 
     }
 \end{cases}
@@ -178,7 +178,7 @@ The naïve solution \todo{reference til koden} is calculating the Jaccard simila
 J(S_1,S_2) = \frac{x}{x+y}
 \end{equation}
 
-Because we have to permute every possible pair of actors and for each pair check if the appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$ is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
+Because we have to permute every possible pair of actors and for each pair check if they appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$ is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
 
 \subsubsection{Actual Running Time}
 The actual running time with the naïve implementation takes too long for our normal laptop computer and outruns our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}. This figure is not very exciting in itself, but when we plot it together with the actual running times for the other implementations like MinHashing and Locality Sensitive Hashing, it will show how bad the naive implementation is. \\
@@ -193,8 +193,9 @@ The actual running time with the naïve implementation takes too long for our no
 
 
 \section{MinHashing}\label{sec:minhashing}
-How does MinHashing work?
-MinHashing is a way of compressing the information stored in the characteristic matrix into space efficient signatures without loosing too much accuracy. MinHashing reduces the number of rows. The number of columns stays the same. Signatures are produced by first permuting the rows in the characteristic matrix. After the rows have been permuted we proceed by looking at the first column where we search until we find the first 1. 
+MinHashing is a way of compressing the information stored in the characteristic matrix into space efficient signatures without loosing too much accuracy. MinHashing reduces the number of rows in the characteristic matrix. The number of columns stays the same.\\
+
+Signatures are produced by first permuting the rows in the characteristic matrix. After the rows have been permuted we proceed by looking at the first column where we search until we find the first 1 where we read the index number. We do this for all columns. The signature is then the list of index numbers. This signature matrix is one row. To gain more accuracy we can permute the rows $k$ times and repeat the search for 1s. $k$ is the number of rows in the signiture matrix.
 
 \subsection{Permutations and the simulating of these}
 Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles. \\
@@ -217,7 +218,7 @@ which is equals to the Jaccard similarity of the two sets.
     \frac{S_1 \cap S_2}{S_1 \cup S_2} = \frac{x}{x+y}
 \end{equation*}
     
-We simulate $k$ random permutations by creating $k$ number of random hash functions \footnote{We are using universal hashing ($(ax + b) \bmod p$) as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in \cite{book:mmds}).}. All row indices are then hashed with all these hash functions, to simulate a permutation. When this is done, we have created the signature matrix, which is a $k\times n$ matrix, that contains the minimum value of $h(x)$, where $x$ is an element in $S$. See figure ~\ref{fig:signature_matrix}\\
+We simulate $k$ random permutations by creating $k$ number of random hash functions \footnote{We are using universal hashing ($(ax + b) \bmod p$) as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in \cite{book:mmds}).}. All row indices are then hashed with all these hash functions, to simulate a permutation. When this is done we proceed to making the signature matrix, which is a $k\times n$ matrix, that contains the minimum value of $h(x)$, where $x$ is an element in $S$. This is like finding the first 1 in each column. See figure ~\ref{fig:signature_matrix}\\
 
 \begin{figure}[!htpb]
     \begin{eqnarray*}
@@ -284,7 +285,7 @@ The pseudo code in algorithm \ref{alg:minhashing}... \todo{blalblabla}
 \end{algorithm}
 
 
-We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$ compared to $O(n^2 \cdot m)$ of the naïve solution, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
+We still have to compare all pairs of actors, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$ compared to $O(n^2 \cdot m)$ of the naïve solution, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
 
 \subsection{Actual Running Times}
 In figure ~\ref{fig:minhashing_at} the actual running times can be seen with different values for $k$. The running time for the naive solution is also plotted in this graph so one can see the difference in performance. \\
