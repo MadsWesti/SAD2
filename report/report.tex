@@ -364,20 +364,36 @@ For every band, two signatures have about $1 - (\left(1-s^r \right)$ chance of b
 \section{B-bit}
 B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing alone. It is a modification for min hashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
-In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 28 bytes}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. \\
+In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. See \cite{book:bbit} section 5.1  \\
 
-Though, if we were able to store one object using only $1$ bit, we would only use as many bits, as we had object. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 28 = 224$ bits, we would at most use $1/s = 1/224$ of the original space. Notice that the time complexity is still the same. \\
+When we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
 
 Say we had some hardware that could do boolean comparisons faster than integer comparisons, then a b-bit implementation could utilize this functionality. But that is out of scope of this course. \\
 
 \subsection{The Variance-Space tradeoff}
 \todo{variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean.}
 
-The variance in our project is a measure of how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This can be precisely quantified by the storage factor. 
+The variance in our project is a measure of how accurate our results are. We can store about 64 times as many samples when converting to 1 bit, but we lose some accuracy. This is the tradeoff, and can be precisely quantified by the storage factor, which calculates the ratio of the  storage. See equation \ref{storagefactor}.
 
 \begin{equation}
     \text {Storage factor} = B(b;R,r_1,r_2)
-\end{equation}\\
+    \label{eq:storagefactor}
+\end{equation}
+
+Where:\\
+$b = $ the number of bits used to store an object. \\
+$R = $ the resemblance between two objects \\
+$r_1 = $ percentage of total elements in $S_1$ \\
+$r_2 = $ percentage of total elements in $S_2$ \\
+
+In \cite{book:bbit} section 2.3, it is deduced that the improvements from using 64 bits to using 1 bit will at least be 21.3-fold. Let us state that $b_1 = 64$ and $b_2 = 1$, then the improvement ratio between the two will be
+
+\begin{equation}
+    \frac{B(64;R,r_1,r_2)}{B(1;R,r_1,r_2} \Rightarrow \frac{64 R}{R + 1 - r_1}
+    \label{eq:improvementratio}
+\end{equation}
+
+In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{64}{1}$. In the worst case, the resemblance, $R=.5$, and $r_1, r_2 \rightarrow 0$ the ratio will be $\frac{64}{3} \sim 21.3$
 
 \section{Odd sketch}
 
