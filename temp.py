@@ -7,8 +7,8 @@ import operator
 
 # CONFIGURATION
 
-number_of_movies_threshold = 50
-min_rank = 8.0
+number_of_movies_threshold = 10
+min_rank = 0.0
 
 ## Naive
 naive = False
@@ -24,7 +24,7 @@ bu = 1 # buckets
 ### Remember to set the k value in MinHashing
 
 bbit = True
-num_of_bits = 1
+num_of_bits = 3
 
 def parse_data_actors():
     movies_dict = OrderedDict()
@@ -206,7 +206,6 @@ def approximate_jaccard_minhash(matrix, movies, actors, k):
     n = len(actors)
     m = len(movies)
     signature_matrix, _ = create_sig_matrix(matrix, m, n, k)
-    print signature_matrix
     for i in range(0,n):
         for j in range(i + 1, n):
             similarity[actors[i],actors[j]] = 0.0
@@ -228,10 +227,7 @@ def approximate_jaccard_minhash_bbit(matrix, movies, actors, k, b):
     for i in range(0, len(signature_matrix)):
         for j in range(0, len(signature_matrix[0])):
             signature_matrix[i][j] = convert_to_bbit(signature_matrix[i][j], b)
-    print signature_matrix
-
-    #calculate similarity
-    print signature_matrix
+    #calculate similarity1
     for i in range(0,n):
         for j in range(i + 1, n):
             similarity[actors[i],actors[j]] = 0.0
