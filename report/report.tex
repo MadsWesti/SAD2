@@ -110,11 +110,11 @@ An actor is represented as a set of movies\footnote{Corresponding to the ids of 
 a_1 = \{m_1, m_2, m_3, \ldots , m_i\}
 \end{equation}
 
-Instead of storing the actors as sets, for reasons that become more apparent in section \ref{sec:minhashing}, it is beneficial to view the data as a binary characteristic matrix, where the rows are movies and the columns are actors, and the values of the matrix defines whether an actor had a role in a given movie or not. 
+Instead of storing the actors as sets, for reasons that become more apparent in section \ref{sec:minhashing}, it is beneficial to view the data as a binary characteristic matrix, where the rows are movies, the columns are actors and the values of the matrix defines whether an actor had a role in a given movie or not.\\ 
 
 \begin{figure}[!htbp]
 \begin{eqnarray*}
- & n \ \text{roles} \\
+ & n \ \text{actors} \\
  m \ \text{movies} = & 
 \begin{cases}
     \overbrace{
@@ -134,26 +134,23 @@ Instead of storing the actors as sets, for reasons that become more apparent in 
 \label{fig:char_matrix}
 \end{figure}
 
-If we were to save the data as the full matrix as seen in ~\ref{fig:char_matrix}, the space complexity would be $\Theta(n \times m)$. In the actual implementation \todo{reference til koden}The characteristic matrix is stored as an dictionary to avoid storing 0's in the matrix, as suggested in \cite{book:mmds} p. 81. The space complexity is still upper bound by $(a \cdot m)$, but since the matrix in most cases is very sparse, the average space consumption is much less. In our case with the IMDB data set:
+If we were to save the data as the full matrix as seen in ~\ref{fig:char_matrix}, the space complexity would be $\Theta (n \cdot m)$. In the actual implementation, \todo{reference til koden} the characteristic matrix is stored as an dictionary with a tuple $(a_i,m_j)$ as key, corresponding to an actor $j$ appearing in a movie $j$. This gives us constant lookup time and avoids storing 0's in the matrix\footnote{As suggested in \cite{book:mmds} p. 81}. The space complexity is still upper bound by $(n \cdot m)$, but since the matrix in most cases is very sparse, the average space consumption is much less. In our case with the IMDB data set:
 \begin{equation}
-a = 460428
-m = 63594
-s = 1323388
-ratio = \frac{1323388}{63594 \cdot 460428} = 4.52\cdot 10^{-5}
+\begin{aligned}
+a &= 460428\\
+m &= 63594\\
+s &= 1323388\\
+ratio &= \frac{1323388}{63594 \cdot 460428} = 4.52\cdot 10^{-5}
+\end{aligned}
 \end{equation}
 
-The naïve solution is calculating the Jaccard similarity using the characteristic matrix $D$, by looping through all pairs of actors, and for each pair loop through all the movies. We define $x = |S_1 \cap S_2|$\footnote{i.e the number of movies for which $D$ contains an entry for booth actors}. If we view the set union as $|S_1 \cup S_2| = |S_1 \oplus S_2| + |S_1 \cap S_2|$, we can define $y = |S_1 \oplus S_2|$\footnote{i.e the symmetric difference of the sets, the number of movies for which there are an entry for either one of the actor or the other in $D$}. The Jaccard similarity can therefore be computed as:
+The naïve solution \todo{reference til koden} is calculating the Jaccard similarity using the characteristic matrix dictionary $D$, by looping through all pairs of actors, and for each pair loop through all the movies. We define $x = |S_1 \cap S_2|$\footnote{i.e the number of movies for which $D$ contains an entry for booth actors}. If we view the set union as $|S_1 \cup S_2| = |S_1 \oplus S_2| + |S_1 \cap S_2|$, we can define $y = |S_1 \oplus S_2|$\footnote{i.e the symmetric difference of the sets, the number of movies for which there are an entry for either one of the actor or the other in $D$}. The Jaccard similarity can therefore be computed as:
 
 \begin{equation}
 J(S_1,S_2) = \frac{x}{x+y}
 \end{equation}
 
-
-Since we have three nested for loops the time complexity is ...
-
-Because we have to permute every possible pair of roles, the running time is $O(n^2 \cdot m)$, where $n$ is the number of distinct roles, and $m$ is the number of movies. In a scenario where $m$ is almost equal to $n$, the runtime will be $O(n^3)$. \\
-
-This will surely not fit in memory with the whole dataset, so more sofisticated algorithms are needed. \\
+Because we have to permute every possible pair of actors and for each pair check if the appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$ is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
 
 \subsubsection{Actual Running Time}
 The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}.
