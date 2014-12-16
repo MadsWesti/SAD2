@@ -10,6 +10,7 @@
 \usepackage{float}
 \usepackage{todonotes}
 \usepackage{tikz}
+\usetikzlibrary{arrows}
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{pdfpages}
@@ -25,7 +26,6 @@
 
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
-\usepackage{tikz}
 \usepackage{epstopdf}
 
 \bibliographystyle{plain}
@@ -52,13 +52,13 @@
 \newpage
 
 \setcounter{page}{1}
-\section{The method acting problem}
+\section{Finding a Similar Actor}
 
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-Are we changing the problem?
-\end{mdframed}
+Say you want to make a movie with a specific actor as the lead role, but the actor is unavailable. You have already written the script, and found all the other actors. The only thing missing is the lead actor. \\
 
-Acting is hard, the specific branch of method acting\footnote{Actors use this technique to create in themselves the thoughts and feelings of their role} appear even harder. Whenever an actor has finished playing a role, the process of creating a character starts all over. This is time consuming and inefficient, but what if the actor could use parts of his or hers current role? We want to construct an algorithm that gives actors clues to which roles to audition for next, by measuring the similarity between roles. We have dubbed this similarity search problem the "Method acting problem".
+You find a similar actor. You find the most similar actor. And for this we must assume that, what defines an actor, is what movies it appears in. So you find the actor that has the most movies in common with your intended actor, and use that actor instead. \\
+
+For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster.
 
 
 \section{Implementation}
@@ -193,19 +193,24 @@ We still have to permute all pairs of roles, but the number of comparisons is re
 In figure ~\ref{fig:minhashing_at} the actual running times can be seen.
 
 
-%\begin{figure}[!htpb]
-%    \begin{center}
-%        \input{plots/minhashing_at.tex}
-%        \caption{MinHashing Actual Times}
-%        \label{fig:minhashing_at}
-%    \end{center}
-%\end{figure}
+\begin{figure}[!htpb]
+    \begin{center}
+        \input{plots/minhashing_at.tex}
+        \caption{MinHashing Actual Times}
+        \label{fig:minhashing_at}
+    \end{center}
+\begin{equation}
+    \text {S-curve equation} = 1 - (1 - s^r)^b 
+\end{equation}
+\end{figure}
 
 
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then hash the vectors into a large number of buckets. If 2 vectors hash to the same bucket there is a good chance that they are similar. These vectors become candidate pairs, and we only compare candidate pairs for similarity. This leaves us with a significant fraction of the original set of pairs to check. \\
 
-In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into 2 bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. They are the candidate pairs to be checked for similarity, whereas the red buckets all contain only one or zero signatures, and are not checked for similarity. \\
+In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into 2 bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. If a signature is in one or more buckets it is a candidate signature to be checked for similarity, whereas if a signature is only in red buckets, which have only one or zero signatures, it is discarded as a candidate signature. \\
+
+So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded signatures are $S_2, S_5$.
 
 \begin{figure}[!htpb]
     \begin{center}
@@ -222,9 +227,11 @@ In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been disse
             \draw (-.5,3) node {$b_0$};
             \draw (-.5,1) node {$b_1$};
 
+            % The overbrace
             \draw (10.5, 4.5) node {$\overbrace{\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad}$};
             \draw (10.5,5.5) node {buckets};
 
+            % Signature matrix (left part)
             \draw (0.5,3.5) node {1};
             \draw (0.5,2.5) node {3};
             \draw (0.5,1.5) node {4};
@@ -260,13 +267,16 @@ In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been disse
             \draw (6.5,1.5) node {3};
             \draw (6.5,0.5) node {1};
 
+            % Fill all with red (in right part)
             \foreach \x in {0,...,6} \path[fill=red!30] (7.1+\x,0.1) rectangle (7.9+\x,1.9);
             \foreach \x in {0,...,6} \path[fill=red!30] (7.1+\x,2.1) rectangle (7.9+\x,3.9);
 
+            % Fill the right ones with green
             \path[fill=green!50] (7.1,2.1) rectangle (7.9,3.9);
             \path[fill=green!50] (8.1,0.1) rectangle (8.9,1.9);
             \path[fill=green!50] (10.1,0.1) rectangle (10.9,1.9);
 
+            % Names
             \draw (7.5,3.5) node {$S_0$};
             \draw (7.5,3.0) node {$S_1$};
             \draw (7.5,2.5) node {$S_6$};
@@ -283,6 +293,32 @@ In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been disse
             \draw (10.5,1.0) node {$S_4$};
             \draw (11.5,1.5) node {$S_5$};
 
+
+            % Arrows
+            \path[-] (8,-.1) edge [bend left] (6,-1);
+            \path[->] (6,-1) edge [bend right] (4,-2);
+            \path[->] (10,-.1) edge [bend right] (9,-2);
+
+            % Candidate squares
+            \path[fill=green!50] (3.1, -4.0) rectangle (4.9, -2.2);
+            \path[fill=red!30] (8.1, -4.0) rectangle (9.9, -2.2);
+            \draw (3,-4.1) rectangle (5,-2.1);
+            \draw (8,-4.1) rectangle (10,-2.1);
+
+            % Candidate signatures
+            \draw (3.5,-2.5) node {$S_0$};
+            \draw (3.5,-3.5) node {$S_1$};
+            \draw (4.5,-2.5) node {$S_3$};
+            \draw (4.5,-3.5) node {$S_4$};
+            \draw (4.0,-3) node {$S_6$};
+
+            \draw (9.5,-3) node {$S_5$};
+            \draw (8.5,-3) node {$S_2$};
+
+            \draw (9,-4.5) node {Non-candidate signatures};
+            \draw (4,-4.5) node {Candidate signatures};
+            
+
         \end{tikzpicture}
     \caption{LSH buckets and bands}
     \label{fig:lsh_buckets}
@@ -290,12 +326,9 @@ In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been disse
 \end{figure}
 
 \subsection{Analysis}
-In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures away, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures become a candidate pair. \\
+In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
-% Tweak b and r
-% Draw the S-curve
-
-We want as few false negatives/positives as possible. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot.
+In some problems, it is important to have no false negatives, or no false positives. In these problems the threshold can be chosen lower or higher, to match the wanted ratio. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot. In this project we would rather like false positives than false negatives. To achieve a higher amount of false positives, we could adjust our threshold to be higher than the point of the steepest curve. This would mean a higher change for signatures to become candidate pairs. In this project's implementation we have sacrificed correctness for speed, so we have chosen our threshold according to \ref{eq:s-estimate}. \\
 
 \begin{equation}
     \text {S-curve equation} = 1 - (1 - s^r)^b 
@@ -309,7 +342,9 @@ We want as few false negatives/positives as possible. We can plot the probabilit
     \end{center}
 \end{figure}
 
-We choose our similarity threshold on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. 
+
+We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. This point can be found using equation \ref{eq:s-estimate}, where we set  our tuning parameters $r$, and $b$ accordingly.
+
 
 \begin{equation}
     s = (1/b)^{1/r}
@@ -317,17 +352,16 @@ We choose our similarity threshold on the x-axis of the S-curve graph. If we wan
 \end{equation}
 
 
-How much accuracy do we sacrifice in percent?\\
+\todo{Talk about that thing with 0.0000035\% something from ch3}
 
-Run time analysis/space complexity
-While the use of minhashing reduces the running time of the similarity calculations. It is still not fesible to use the algorithm on the IMDB data set. The general idea of LSH is that before making comparisions, the signtures are hashed in such a way that similar signatures are hashed to the same buckets, resulting in candidate pairs for comparision.\\
-
-If you were an algorithm which algorithm would you be?
 
 \section{B-bit}
-B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing.
+B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing alone. It is a modification for min hashing.
+
 \subsection{The Variance-Space tradeoff}
-(variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean. Min egen husker) So the variance in our project is how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This is a bit fluffy but it can be precisely quantified by the storage factor. 
+\todo{(variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean. Min egen husker)}
+
+The variance in our project is a measure of how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This is a bit fluffy but it can be precisely quantified by the storage factor. 
 
 \begin{equation}
     \text {Storage factor} = B(b;R,r_1,r_2)
