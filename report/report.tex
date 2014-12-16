@@ -29,6 +29,12 @@
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
 \usepackage{epstopdf}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\renewcommand{\algorithmicforall}{\textbf{for each}}
+\makeatletter
+\def\BState{\State\hskip-\ALG@thistlm}
+\makeatother
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -116,12 +122,12 @@ An actor has starred in a series of movies. This set of movies we will call $S_1
 
 For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. If the running time takes longer than our patience permits, we will just put in how long we waited, and note that we did not run it through.\\
 
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
 We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many roles, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 57,736 distinct movies, and 553,263 distinct roles (not counting the movies without any roles and roles with nonexisting movie-ids).\\
 
 \todo{rewrite actor}
 But even though there are 10 more roles per movies. Many of these roles are only in one movie, and only few roles are in many movies. If we calculate the average number of movies, that a role appears in, it is somewhere between 1.2 and 2.0, depending on what our cut-off rank is (see figure ~\ref{fig:sparsenesscutoff}. We have defined our minimum rank cutoff to movies with at least 7.0 in rank, which corresponds to an average of 1.7 movies per role. This has influence on the characteristic matrix, that we create when parsing.
-\end{mdframed}
+%\end{mdframed}
 This will be taken into account when creating our random dummy data.
 
 \begin{figure}[!htbp]
@@ -240,6 +246,52 @@ We simulate $k$ random permutations by creating $k$ number of random hash functi
     \caption{Signature matrix}
     \label{fig:signature_matrix}
 \end{figure}
+
+The pseudo code in algorithm \ref{alg:minhashing}... \todo{blalblabla}
+
+\begin{algorithm}
+    \caption{MinHashing algorithm}\label{alg:minhashing}
+    \begin{algorithmic}
+    \State $M\gets \text{characteristic matrix dictionary}$
+    \State $a\gets \text{actors}$
+    \State $m\gets \text{movies}$
+    \State $k\gets \text{number of permutations}$\\
+    \BState \emph{Declare signature matrix}:
+    \State $SIG\gets \text{matrix with dimensions } a.length \times k$
+    \ForAll{$i$ in $SIG$} 
+        \State $i\gets \infty$
+    \EndFor\\
+    \BState \emph{Define hash functions}:
+    \State $H\gets \text{empty list of universal hash functions, length }k$
+    \State $p\gets \text{prime number larger than } k$
+    \ForAll{$h_{\pi}$ in $H$} 
+        \State $a\gets \text{random integer from } 1 \ldots p$
+        \State $b\gets \text{random integer from } 0 \ldots p$
+        \State $h_{\pi}\gets (a, b, p)$
+    \EndFor\\
+    \BState \emph{Populate signature matrix}:
+    \ForAll{$(i,j)$ in $M$} 
+        \For{$\pi$ in $0 \ldots k$}
+            \State $v \gets h_{\pi}(j)$
+            \If{$v<SIG[i,\pi]$}
+                \State $SIG[i,\pi] = v$
+            \EndIf
+        \EndFor
+    \EndFor\\
+    \BState \emph{Calculate similarity}:
+    \State $similarity \gets empty dictionary$ 
+    \ForAll{pairs $a_i, a_j$ in $actors$}
+        \State $c \gets 0$ number of collisions
+        \For{$\pi$ in $0 \ldots k$}
+            \If{$SIG[i,\pi] = SIG[j,\pi]$}
+                \State $c += 1$
+            \EndIf
+        \EndFor
+        \State $similarity[a_i,a_j] \gets \frac{c}{k}$ 
+    \EndFor
+    \end{algorithmic}
+\end{algorithm}
+
 
 We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$ compared to $O(n^2 \cdot m)$ of the naïve solution, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
 
