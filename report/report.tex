@@ -188,8 +188,9 @@ The actual running time with the naïve implementation takes too long for our no
 
 \section{MinHashing}\label{sec:minhashing}
 How does MinHashing work?
- MinHashing is a way of approximating the information stored in the characteristic matrix
+MinHashing is a way of compressing the information stored in the characteristic matrix into space efficient signatures without loosing too much accuracy. MinHashing reduces the number of rows. The number of columns stays the same. Signatures are produced by first permuting the rows in the characteristic matrix. After the rows have been permuted we proceed by looking at the first column where we search until we find the first 1. 
 
+\subsection{Permutations and the simulating of these}
 Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles. \\
 
 Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
