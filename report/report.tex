@@ -311,7 +311,7 @@ In some problems, it is important to have no false negatives, or no false positi
     \end{center}
 \end{figure}
 
-We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. We then use equation \ref{eq:s-estimate}, and set $r$, and $b$ accordingly, to find an $s$ value close to our threshold $t$.
+We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. We then use equation \ref{eq:s-estimate}, and set our tuning paramenters $r$, and $b$ accordingly, to find an $s$ value close to our threshold $t$.
 
 \begin{equation}
     s = (1/b)^{1/r}
