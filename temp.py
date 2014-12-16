@@ -6,8 +6,10 @@ from collections import OrderedDict
 import operator
 
 # CONFIGURATION
-
-number_of_movies_threshold = 10
+file_actors = "data/actors.txt"
+file_roles = "data/roles.txt"
+file_movies = "data/movies.txt"
+number_of_movies_threshold = 0
 min_rank = 0.0
 
 ## Naive
@@ -23,7 +25,7 @@ b = 10 # bands
 bu = 1 # buckets
 ### Remember to set the k value in MinHashing
 
-bbit = True
+bbit = False
 num_of_bits = 3
 
 def parse_data_actors():
@@ -34,7 +36,7 @@ def parse_data_actors():
     characteristic_matrix = {}
 
     #parse actors
-    with open("data/actors.txt") as f:
+    with open(file_actors) as f:
         for line in f:
             actor = re.split(',', line)
             a_id = int(actor[0])
@@ -45,7 +47,7 @@ def parse_data_actors():
                 actors_dict[a_id] = first_name+" "+last_name
 
     #parse movies
-    with open("data/movies.txt") as f:
+    with open(file_movies) as f:
         for line in f:
             movie = re.split(',', line)
             m_id = int(movie[0].strip())
@@ -57,7 +59,7 @@ def parse_data_actors():
                 movies_dict[m_id] = name
 
     #parse roles
-    with open("data/roles.txt") as f:
+    with open(file_roles) as f:
         for line in f:
             role = re.split(',', line)
             actor_id = int(role[0].strip())
