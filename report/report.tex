@@ -7,7 +7,6 @@
 \usepackage{color}      % use if color is used in text
 \usepackage{hyperref}  
 \usepackage{url}
-\usepackage{float}
 \usepackage{todonotes}
 \usepackage{tikz}
 \usetikzlibrary{arrows}
@@ -35,6 +34,13 @@
 \makeatletter
 \def\BState{\State\hskip-\ALG@thistlm}
 \makeatother
+\usepackage{float}
+\usepackage{caption}
+\DeclareCaptionFormat{algor}{%
+  \hrulefill\par\offinterlineskip\vskip1pt%
+    \textbf{#1#2}#3\offinterlineskip\hrulefill}
+\DeclareCaptionStyle{algori}{singlelinecheck=off,format=algor,labelsep=space}
+\captionsetup[algorithm]{style=algori}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -172,7 +178,7 @@ ratio &= \frac{1323388}{63594 \cdot 460428} = 4.52\cdot 10^{-5}
 \end{aligned}
 \end{equation}
 
-The naïve solution \todo{reference til koden} is calculating the Jaccard similarity using the characteristic matrix dictionary $D$, by looping through all pairs of actors, and for each pair loop through all the movies. We define $x = |S_1 \cap S_2|$\footnote{i.e the number of movies for which $D$ contains an entry for booth actors}. If we view the set union as $|S_1 \cup S_2| = |S_1 \oplus S_2| + |S_1 \cap S_2|$, we can define $y = |S_1 \oplus S_2|$\footnote{i.e the symmetric difference of the sets, the number of movies for which there are an entry for either one of the actor or the other in $D$}. The Jaccard similarity can therefore be computed as:
+The naïve solution \todo{reference til koden} is calculating the Jaccard similarity using the characteristic matrix dictionary $D$, by looping through all pairs of actors, and for each pair loop through all the movies. We define $x = |S_1 \cap S_2|$\footnote{i.e the number of movies for which $D$ contains an entry for booth actors}. If we view the set union as $|S_1 \cup S_2| = |S_1 \oplus S_2| + |S_1 \cap S_2|$, we can define $y = |S_1 \oplus S_2|$\footnote{i.e the symmetric difference of the sets, the number of movies for which there are an entry for either one actor or the other in $D$}. The Jaccard similarity can therefore be computed as:
 
 \begin{equation}
 J(S_1,S_2) = \frac{x}{x+y}
@@ -198,7 +204,7 @@ MinHashing is a way of compressing the information stored in the characteristic 
 Signatures are produced by first permuting the rows in the characteristic matrix. After the rows have been permuted we proceed by looking at the first column where we search until we find the first 1 where we read the index number. We do this for all columns. The signature is then the list of index numbers. This signature matrix is one row. To gain more accuracy we can permute the rows $k$ times and repeat the search for 1s. $k$ is the number of rows in the signiture matrix.
 
 \subsection{Permutations and the simulating of these}
-Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles. \\
+Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles\todo{Slightly irrelevant}. \\
 
 Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
 
@@ -215,12 +221,12 @@ Then the probability of having found a row in $x$, for a random permutation, is
 which is equals to the Jaccard similarity of the two sets.
 
 \begin{equation*}
-    \frac{S_1 \cap S_2}{S_1 \cup S_2} = \frac{x}{x+y}
+    \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|} = \frac{x}{x+y}
 \end{equation*}
     
 We simulate $k$ random permutations by creating $k$ number of random hash functions \footnote{We are using universal hashing ($(ax + b) \bmod p$) as our hashing functions, where there will be some collisions in the hashes. Some row indexes will be hashed to the same, but as long as $k$ is large it is not important (p. 83-84 in \cite{book:mmds}).}. All row indices are then hashed with all these hash functions, to simulate a permutation. When this is done we proceed to making the signature matrix, which is a $k\times n$ matrix, that contains the minimum value of $h(x)$, where $x$ is an element in $S$. This is like finding the first 1 in each column. See figure ~\ref{fig:signature_matrix}\\
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
     \begin{eqnarray*}
      & n \ \text{signatures} \\
      k \ \text{permutations} = & 
@@ -239,10 +245,10 @@ We simulate $k$ random permutations by creating $k$ number of random hash functi
     \label{fig:signature_matrix}
 \end{figure}
 
-The pseudo code in algorithm \ref{alg:minhashing}... \todo{blalblabla}
+The above described method for calculating similarities are described in detail in our pseudo python code in algorithm \ref{alg:minhashing}. This forms the basis for our implementation.
 
-\begin{algorithm}
-    \caption{MinHashing algorithm}\label{alg:minhashing}
+\begin{center}   
+    \captionof{algorithm}{MinHashing algorithm}\label{alg:minhashing}
     \begin{algorithmic}
     \State $M\gets \text{characteristic matrix dictionary}$
     \State $a\gets \text{actors}$
@@ -271,7 +277,7 @@ The pseudo code in algorithm \ref{alg:minhashing}... \todo{blalblabla}
         \EndFor
     \EndFor\\
     \BState \emph{Calculate similarity}:
-    \State $similarity \gets empty dictionary$ 
+    \State $similarity \gets \text{empty dictionary}$ 
     \ForAll{pairs $a_i, a_j$ in $actors$}
         \State $c \gets 0$ number of collisions
         \For{$\pi$ in $0 \ldots k$}
@@ -282,16 +288,15 @@ The pseudo code in algorithm \ref{alg:minhashing}... \todo{blalblabla}
         \State $similarity[a_i,a_j] \gets \frac{c}{k}$ 
     \EndFor
     \end{algorithmic}
-\end{algorithm}
+\end{center}
 
-
-We still have to compare all pairs of actors, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$ compared to $O(n^2 \cdot m)$ of the naïve solution, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
+As in the naïve solution, we still have to compare all pairs of actors, but the number values needed to compared for each pair of actors is reduced from $m$ to $k$, resulting in a new running time $O(n^2 \cdot k)$ compared to previous $O(n^2 \cdot m)$, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
 
 \subsection{Actual Running Times}
 In figure ~\ref{fig:minhashing_at} the actual running times can be seen with different values for $k$. The running time for the naive solution is also plotted in this graph so one can see the difference in performance. \\
 
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
     \begin{center}
         \input{plots/minhashing_at.tex}
         \caption{MinHashing Actual Times}
@@ -307,7 +312,7 @@ In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been disse
 
 So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded signatures are $S_2, S_5$.
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
     \begin{center}
         \begin{tikzpicture}
             \draw rectangle (14,4);
@@ -430,7 +435,7 @@ In some problems, it is important to have no false negatives, or no false positi
     \label{eq:s}
 \end{equation}\\
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
     \begin{center}
         \input{plots/scurve.tex}
         \caption{S-curve}
@@ -453,7 +458,7 @@ The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together 
 
 \todo{Skal vi lave comparison af correctness?}
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
     \begin{center}
         \input{plots/lsh_at.tex}
         \caption{LSH Actual Times}
@@ -472,7 +477,7 @@ Say we had some hardware that could do boolean comparisons faster than integer c
 
 
 \subsection{The Variance-Space tradeoff}
-The variance in our project is a measure of how accurate our results are. We can store about 64 times as many samples when converting to 1 bit, but we lose some accuracy. This is the tradeoff, and can be precisely quantified by the storage factor, which calculates the ratio of the  storage. See equation \ref{storagefactor}.
+The variance in our project is a measure of how accurate our results are. We can store about 64 times as many samples when converting to 1 bit, but we lose some accuracy. This is the tradeoff, and can be precisely quantified by the storage factor, which calculates the ratio of the  storage. See equation \ref{eq:storagefactor}.
 
 \begin{equation}
     \text {Storage factor} = B(b;R,r_1,r_2)
@@ -492,10 +497,10 @@ In \cite{article:bbit} section 2.3, it is deduced that the improvements from usi
     \label{eq:improvementratio}
 \end{equation}
 
-In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{64}{1}$. In the worst case, the resemblance, $R=.5$, and $r_1, r_2 \rightarrow 0$ the ratio will be $\frac{64}{3} \sim 21.3$. See figure \ref{fig:bbit} to see a graph from \cite{book:bbit} which shows the storage improvements with different parameters. \\
+In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{64}{1}$. In the worst case, the resemblance, $R=.5$, and $r_1, r_2 \rightarrow 0$ the ratio will be $\frac{64}{3} \sim 21.3$. See figure \ref{fig:bbit} to see a graph from \cite{article:bbit} which shows the storage improvements with different parameters. \\
 
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
     \begin{center}
         \includegraphics{plots/bbit/bbit.eps}
         \caption{B-bit storage improvement}
@@ -507,7 +512,7 @@ In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{
 \subsection{Running Time}
 Our implementation of the b-bit algorithm does not succesfully run on the imdb dataset, only on our dummy data. Part of the reasom for this is that we have not been able to implement a data type with a small enough overhead. So instead of our data actually taking up less space, it takes up the same space, and furthermore additional processing is done to it. See figure \ref{fig:bbit_at} for the actual running times.\\
 
-\begin{figure}[!htpb]
+\begin{figure}[H]
     \begin{center}
         %\input{plots/bbit_at.tex}
         \caption{B-bit actual running time}
