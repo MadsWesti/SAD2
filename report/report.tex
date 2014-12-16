@@ -86,38 +86,36 @@ You find a similar actor. You find the most similar actor. And for this we must 
 
 The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies. This gives us $2.6\cdot 10^{17}$ comparisons!\\
 
-For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster without loosing to much accuracy.
+For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes and compressed data to make the process faster without loosing too much accuracy.
 
 
 \section{Implementation}
 %\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using.\\
+We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using. We then discuss measuring running time.\\
 %\end{mdframed}
 
 \todo{We are using Python}
 We are using Python to implement our algorithms as this is our language of choice. We ran into some problems with Python which we will discuss later in the report.\\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report. For each algorithm we will explain how it works and its application and then go on to explain how we implemented it. We then explain the time and space complexity. We finish each section by discussing the results we achieved.\\
-
-
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report. For each algorithm we will explain how it works and its different applications and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section by discussing the results we achieved.\\
 
 
 \subsection{Measuring similarity}
-Since a role is represented as a set movies, we can measure the similarity between roles using the Jaccard similarity, where the similarity between two sets $S_1$ and $S_2$.
+An actor has starred in a series of movies. This set of movies we will call $S_1$. Another actor has been in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, and it is 0 if the sets are disjoint.
 
 \begin{equation}
-Sim(S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
+\text{Jaccard similarity index} (S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
 \end{equation}
-The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, and it is 0 if the sets are disjoint.
+
 
 
 \subsection{Measuring Running Time}
 \todo{Rewrite to actor}
 \todo{And are we doing this at all?}
 
-For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. Though, if the running time is taking longer than out patience permits, we will just put in how long we waited, and note that we did not run it through.
+For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. If the running time takes longer than our patience permits, we will just put in how long we waited, and note that we did not run it through.\\
 
-We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many roles, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 57,736 distinct movies, and 553,263 distinct roles (not counting the movies without any roles and roles with nonexisting movie-ids).
+We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many roles, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 57,736 distinct movies, and 553,263 distinct roles (not counting the movies without any roles and roles with nonexisting movie-ids).\\
 
 But even though there are 10 more roles per movies. Many of these roles are only in one movie, and only few roles are in many movies. If we calculate the average number of movies, that a role appears in, it is somewhere between 1.2 and 2.0, depending on what our cut-off rank is (see figure ~\ref{fig:sparsenesscutoff}. We have defined our minimum rank cutoff to movies with at least 7.0 in rank, which corresponds to an average of 1.7 movies per role. This has influence on the characteristic matrix, that we create when parsing.
 
@@ -144,7 +142,7 @@ Instead of storing the actors as sets, for reasons that become more apparent in 
 
 \begin{figure}[!htbp]
 \begin{eqnarray*}
- & n \ \text{actors} \\
+ & a \ \text{actors} \\
  m \ \text{movies} = & 
 \begin{cases}
     \overbrace{
@@ -164,7 +162,7 @@ Instead of storing the actors as sets, for reasons that become more apparent in 
 \label{fig:char_matrix}
 \end{figure}
 
-If we were to save the data as the full matrix as seen in ~\ref{fig:char_matrix}, the space complexity would be $\Theta (n \cdot m)$. In the actual implementation, \todo{reference til koden} the characteristic matrix is stored as an dictionary with a tuple $(a_i,m_j)$ as key, corresponding to an actor $j$ appearing in a movie $j$. This gives us constant lookup time and avoids storing 0's in the matrix\footnote{As suggested in \cite{book:mmds} p. 81}. The space complexity is still upper bound by $(n \cdot m)$, but since the matrix in most cases is very sparse, the average space consumption is much less. In our case with the IMDB data set:
+If we were to save the data as the full matrix as seen in ~\ref{fig:char_matrix}, the space complexity would be $\Theta (n \cdot m)$. In the actual implementation, \todo{reference til koden} the characteristic matrix is stored as an dictionary with a tuple $(a_i,m_j)$ as key, corresponding to an actor $i$ appearing in a movie $j$. This gives us constant lookup time and avoids storing 0's in the matrix\footnote{As suggested in \cite{book:mmds} p. 81}. The space complexity is still upper bound by $(n \cdot m)$, but since the matrix in most cases is very sparse, the average space consumption is much less. In our case with the IMDB data set where $s$ is the number of ones:
 \begin{equation}
 \begin{aligned}
 a &= 460428\\
@@ -183,7 +181,7 @@ J(S_1,S_2) = \frac{x}{x+y}
 Because we have to permute every possible pair of actors and for each pair check if the appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$ is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
 
 \subsubsection{Actual Running Time}
-The actual running time with the naïve implementation takes too long for our normal laptop computer to outrun our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}.
+The actual running time with the naïve implementation takes too long for our normal laptop computer and outruns our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}.
 
 \begin{figure}[!htbp]
     \begin{center}
