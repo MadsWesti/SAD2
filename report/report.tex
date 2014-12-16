@@ -326,12 +326,13 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
 \end{figure}
 
 \subsection{Analysis}
-In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
+In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
-In some problems, it is important to have no false negatives, or no false positives. In these problems the threshold can be chosen lower or higher, to match the wanted ratio. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot. In this project we would rather like false positives than false negatives. To achieve a higher amount of false positives, we could adjust our threshold to be higher than the point of the steepest curve. This would mean a higher change for signatures to become candidate pairs. In this project's implementation we have sacrificed correctness for speed, so we have chosen our threshold according to \ref{eq:s-estimate}. \\
+In some problems, it is important to have no false negatives, or no false positives. In these problems the threshold can be chosen lower or higher, to match the wanted ratio. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot. In this project we would rather like false positives than false negatives. To achieve a higher amount of false positives, we could adjust our threshold to be higher than the point of the steepest curve. This would mean a higher change for signatures to become candidate pairs. Though in this project's implementation we have sacrificed correctness for speed, so we have chosen our threshold according to \ref{eq:s-estimate}. \\
 
 \begin{equation}
-    \text {S-curve equation} = 1 - (1 - s^r)^b 
+    \text {Probability} = 1 - (1 - s^r)^b 
+    \label{eq:s}
 \end{equation}\\
 
 \begin{figure}[!htpb]
@@ -342,9 +343,9 @@ In some problems, it is important to have no false negatives, or no false positi
     \end{center}
 \end{figure}
 
+When choosing $t$ according to equation \ref{eq:s-estimate} - which is what we do in this project - the probability (equation \ref{eq:s}) of becoming a candidate pair is around $0.63$, no matter what $b$ and $r$ is set to. \\
 
-We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. This point can be found using equation \ref{eq:s-estimate}, where we set  our tuning parameters $r$, and $b$ accordingly.
-
+This means that for every band, two signatures have about $1 - 0.63 = 0.37 = 37\%$ chance of being regarded as similar. But there are $b$ bands in which this is applicable
 
 \begin{equation}
     s = (1/b)^{1/r}
