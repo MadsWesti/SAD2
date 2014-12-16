@@ -104,13 +104,13 @@ We would like to find a similar actor to replace our unavailable lead actor. Whe
 
 We are using Python to implement our algorithms as this is our language of choice. \\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.\\
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit}, which is the extension to our report.\\
 
-For each algorithm we will explain how it works and its different applications and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section by discussing the results we achieved.\\
+For each algorithm we will explain how it works and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section with a discussion.\\
 
 
 \subsection{Measuring similarity}
-An actor has starred in a series of movies. This set of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint.
+An actor has starred in a series of movies. This set\footnote{To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles} of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint.
 
 \begin{equation}
 \text{Jaccard similarity index} (S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
@@ -131,7 +131,7 @@ One could argue that we could use a minimum rank as a cutoff on the original dat
 
 
 \subsection{Naïve Implementation}
-
+In this implementation we do not use any approximation or compression techniques.
 
 \subsubsection{Data representation}
 An actor is represented as a set of movies\footnote{Corresponding to the ids of the movies, which are integers} the specific actor appear in.
@@ -193,6 +193,7 @@ The actual running time with the naïve implementation takes too long for our no
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
 
 \section{MinHashing}\label{sec:minhashing}
 MinHashing is a way of compressing the information stored in the characteristic matrix into space efficient signatures without loosing too much accuracy. MinHashing reduces the number of rows in the characteristic matrix. The number of columns stays the same.\\
@@ -200,7 +201,7 @@ MinHashing is a way of compressing the information stored in the characteristic 
 Signatures are produced by first permuting the rows in the characteristic matrix. After the rows have been permuted we proceed by looking at the first column where we search until we find the first 1 where we read the index number. We do this for all columns. The signature is then the list of index numbers. This signature matrix is one row. To gain more accuracy we can permute the rows $k$ times and repeat the search for 1s. $k$ is the number of rows in the signiture matrix.
 
 \subsection{Permutations and the simulating of these}
-Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles\todo{Slightly irrelevant}. \\
+Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. \\
 
 Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
 
@@ -300,6 +301,7 @@ In figure ~\ref{fig:minhashing_at} the actual running times can be seen with dif
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
 
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then hash the vectors into a large number of buckets, in such a way that if two vectors hash to the same bucket they are similar. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
@@ -462,6 +464,8 @@ The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together 
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
+
 \section{B-bit}
 B-bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
@@ -519,11 +523,14 @@ Our implementation of the b-bit algorithm does not succesfully run on the imdb d
 \subsection{LSH versus b-Bit}
 These two algorithms are both modifications to MinHashing. How do they compare to each other? Performance. What are their strengths?
 
+\subsection{Discussion}
+
 \section{Odd Sketch}
 Odd Sketch is good when you want to improve precision when the Jaccard similarity index is close to 1. It can provide a short list and ranking over the most similar items.
 
 \subsection{b-Bit versus Odd Sketch}
 
+\subsection{Discussion}
 
 \section{Conclusion}
 \newpage
