@@ -60,29 +60,27 @@ You find a similar actor. You find the most similar actor. And for this we must 
 
 The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies. This gives us $2.6\cdot 10^{17}$ comparisons!\\
 
-For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster without loosing to much accuracy.
+For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes and compressed data to make the process faster without loosing to much accuracy.
 
 
 \section{Implementation}
 %\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using.\\
+We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using. We then discuss measuring running time\\
 %\end{mdframed}
 
 \todo{We are using Python}
 We are using Python to implement our algorithms as this is our language of choice. We ran into some problems with Python which we will discuss later in the report.\\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report. For each algorithm we will explain how it works and its application and then go on to explain how we implemented it. We then explain the time and space complexity. We finish each section by discussing the results we achieved.\\
-
-
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report. For each algorithm we will explain how it works and its different applications and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section by discussing the results we achieved.\\
 
 
 \subsection{Measuring similarity}
-Since a role is represented as a set movies, we can measure the similarity between roles using the Jaccard similarity, where the similarity between two sets $S_1$ and $S_2$.
+An actor has been in a series of movies. This set of movies we will call $S_1$. Another actor has been in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, and it is 0 if the sets are disjoint.
 
 \begin{equation}
-Sim(S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
+\text{Jaccard similarity index} (S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
 \end{equation}
-The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, and it is 0 if the sets are disjoint.
+
 
 
 \subsection{Measuring Running Time}
