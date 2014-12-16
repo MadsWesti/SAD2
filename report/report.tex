@@ -64,9 +64,12 @@ For solving this problem we have created an algorithm that does similarity searc
 
 
 \section{Implementation}
-%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-We would like to find the most similar actor to replace our unavailable lead actor. To do this we first talk about measuring similarity. 
-%\end{mdframed}
+\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+We would like to find a similar actor to replace our unavailable lead actor. To do this we want to find 
+\end{mdframed}
+
+\todo{We are using Python}
+
 We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.
 
 
@@ -80,6 +83,9 @@ The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, an
 
 
 \subsection{Measuring Running Time}
+\todo{Rewrite to actor}
+\todo{And are we doing this at all?}
+
 For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. Though, if the running time is taking longer than out patience permits, we will just put in how long we waited, and note that we did not run it through.
 
 We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many roles, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 57,736 distinct movies, and 553,263 distinct roles (not counting the movies without any roles and roles with nonexisting movie-ids).
@@ -328,12 +334,13 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
 \end{figure}
 
 \subsection{Analysis}
-In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
+In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
-In some problems, it is important to have no false negatives, or no false positives. In these problems the threshold can be chosen lower or higher, to match the wanted ratio. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot. In this project we would rather like false positives than false negatives. To achieve a higher amount of false positives, we could adjust our threshold to be higher than the point of the steepest curve. This would mean a higher change for signatures to become candidate pairs. In this project's implementation we have sacrificed correctness for speed, so we have chosen our threshold according to \ref{eq:s-estimate}. \\
+In some problems, it is important to have no false negatives, or no false positives. In these problems the threshold can be chosen lower or higher, to match the wanted ratio. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot. In this project we would rather like false positives than false negatives. To achieve a higher amount of false positives, we could adjust our threshold to be higher than the point of the steepest curve. This would mean a higher change for signatures to become candidate pairs. Though in this project's implementation we have sacrificed correctness for speed, so we have chosen our threshold according to \ref{eq:s-estimate}. \\
 
 \begin{equation}
-    \text {S-curve equation} = 1 - (1 - s^r)^b 
+    \text {Probability} = 1 - (1 - s^r)^b 
+    \label{eq:s}
 \end{equation}\\
 
 \begin{figure}[!htpb]
@@ -344,9 +351,9 @@ In some problems, it is important to have no false negatives, or no false positi
     \end{center}
 \end{figure}
 
+When choosing $t$ according to equation \ref{eq:s-estimate} - which is what we do in this project - the probability (equation \ref{eq:s}) of becoming a candidate pair is around $0.63$, no matter what $b$ and $r$ is set to. \\
 
-We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. This point can be found using equation \ref{eq:s-estimate}, where we set  our tuning parameters $r$, and $b$ accordingly.
-
+For every band, two signatures have about $1 - (\left(1-s^r \right)$ chance of being regarded as similar, which is not necessarily much. But there are $b$ bands in which this is applicable, which raises the chance of the two whole signatures becoming candidates.
 
 \begin{equation}
     s = (1/b)^{1/r}
@@ -354,16 +361,19 @@ We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If 
 \end{equation}
 
 
-\todo{Talk about that thing with 0.0000035\% something from ch3}
-
-
 \section{B-bit}
-B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing alone. It is a modification for min hashing.
+B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing alone. It is a modification for min hashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
+
+In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 28 bytes}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. \\
+
+Though, if we were able to store one object using only $1$ bit, we would only use as many bits, as we had object. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 28 = 224$ bits, we would at most use $1/s = 1/224$ of the original space. Notice that the time complexity is still the same. \\
+
+Say we had some hardware that could do boolean comparisons faster than integer comparisons, then a b-bit implementation could utilize this functionality. But that is out of scope of this course. \\
 
 \subsection{The Variance-Space tradeoff}
 \todo{variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean.}
 
-The variance in our project is a measure of how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This is a bit fluffy but it can be precisely quantified by the storage factor. 
+The variance in our project is a measure of how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This can be precisely quantified by the storage factor. 
 
 \begin{equation}
     \text {Storage factor} = B(b;R,r_1,r_2)
