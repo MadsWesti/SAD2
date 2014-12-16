@@ -10,6 +10,7 @@
 \usepackage{float}
 \usepackage{todonotes}
 \usepackage{tikz}
+\usetikzlibrary{arrows}
 \usepackage{enumitem}
 \usepackage{hyperref}
 \usepackage{pdfpages}
@@ -25,7 +26,6 @@
 
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
-\usepackage{tikz}
 \usepackage{epstopdf}
 
 \bibliographystyle{plain}
@@ -227,9 +227,11 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
             \draw (-.5,3) node {$b_0$};
             \draw (-.5,1) node {$b_1$};
 
+            % The overbrace
             \draw (10.5, 4.5) node {$\overbrace{\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad}$};
             \draw (10.5,5.5) node {buckets};
 
+            % Signature matrix (left part)
             \draw (0.5,3.5) node {1};
             \draw (0.5,2.5) node {3};
             \draw (0.5,1.5) node {4};
@@ -265,13 +267,16 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
             \draw (6.5,1.5) node {3};
             \draw (6.5,0.5) node {1};
 
+            % Fill all with red (in right part)
             \foreach \x in {0,...,6} \path[fill=red!30] (7.1+\x,0.1) rectangle (7.9+\x,1.9);
             \foreach \x in {0,...,6} \path[fill=red!30] (7.1+\x,2.1) rectangle (7.9+\x,3.9);
 
+            % Fill the right ones with green
             \path[fill=green!50] (7.1,2.1) rectangle (7.9,3.9);
             \path[fill=green!50] (8.1,0.1) rectangle (8.9,1.9);
             \path[fill=green!50] (10.1,0.1) rectangle (10.9,1.9);
 
+            % Names
             \draw (7.5,3.5) node {$S_0$};
             \draw (7.5,3.0) node {$S_1$};
             \draw (7.5,2.5) node {$S_6$};
@@ -288,6 +293,32 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
             \draw (10.5,1.0) node {$S_4$};
             \draw (11.5,1.5) node {$S_5$};
 
+
+            % Arrows
+            \path[-] (8,-.1) edge [bend left] (6,-1);
+            \path[->] (6,-1) edge [bend right] (4,-2);
+            \path[->] (10,-.1) edge [bend right] (9,-2);
+
+            % Candidate squares
+            \path[fill=green!50] (3.1, -4.0) rectangle (4.9, -2.2);
+            \path[fill=red!30] (8.1, -4.0) rectangle (9.9, -2.2);
+            \draw (3,-4.1) rectangle (5,-2.1);
+            \draw (8,-4.1) rectangle (10,-2.1);
+
+            % Candidate signatures
+            \draw (3.5,-2.5) node {$S_0$};
+            \draw (3.5,-3.5) node {$S_1$};
+            \draw (4.5,-2.5) node {$S_3$};
+            \draw (4.5,-3.5) node {$S_4$};
+            \draw (4.0,-3) node {$S_6$};
+
+            \draw (9.5,-3) node {$S_5$};
+            \draw (8.5,-3) node {$S_2$};
+
+            \draw (9,-4.5) node {Non-candidate signatures};
+            \draw (4,-4.5) node {Candidate signatures};
+            
+
         \end{tikzpicture}
     \caption{LSH buckets and bands}
     \label{fig:lsh_buckets}
@@ -295,9 +326,9 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
 \end{figure}
 
 \subsection{Analysis}
-In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures away, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures become a candidate pair. \\
+In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the variables $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
-In some problems, it is important to have no false negatives, or no false positives. In these problems the threshold can be chosen lower or higher, to match the wanted ratio. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot.
+In some problems, it is important to have no false negatives, or no false positives. In these problems the threshold can be chosen lower or higher, to match the wanted ratio. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot. In this project we would rather like false positives than false negatives. To achieve a higher amount of false positives, we could adjust our threshold to be higher than the point of the steepest curve. This would mean a higher change for signatures to become candidate pairs. In this project's implementation we have sacrificed correctness for speed, so we have chosen our threshold according to \ref{eq:s-estimate}. \\
 
 \begin{equation}
     \text {S-curve equation} = 1 - (1 - s^r)^b 
@@ -311,7 +342,7 @@ In some problems, it is important to have no false negatives, or no false positi
     \end{center}
 \end{figure}
 
-We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. We then use equation \ref{eq:s-estimate}, and set $r$, and $b$ accordingly, to find an $s$ value close to our threshold $t$.
+We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If we want to hit a $1:1$ ratio between false positives and false negatives, our threshold should be approximately where the S-curve is the steepest. This point can be found using equation \ref{eq:s-estimate}, where we set $r$, and $b$ accordingly.
 
 \begin{equation}
     s = (1/b)^{1/r}
@@ -319,8 +350,8 @@ We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If 
 \end{equation}
 
 
+\todo{Talk about that thing with 0.0000035\% something from ch3}
 
-%How much accuracy do we sacrifice in percent?\\
 
 \section{B-bit}
 B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing.
