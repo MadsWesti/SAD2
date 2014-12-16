@@ -58,7 +58,7 @@ Say you want to make a movie with a specific actor as the lead role, but the act
 
 You find a similar actor. You find the most similar actor. And for this we must assume that, what defines an actor, is what movies it appears in. So you find the actor that has the most movies in common with your intended actor, and use that actor instead. \\
 
-The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies.\\
+The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies. This gives us $2.6\cdot 10^{17}$ comparisons!\\
 
 For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster without loosing to much accuracy.
 
