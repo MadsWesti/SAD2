@@ -60,26 +60,26 @@ You find a similar actor. You find the most similar actor. And for this we must 
 
 The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies. This gives us $2.6\cdot 10^{17}$ comparisons!\\
 
-For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster without loosing to much accuracy.
+For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes and compressed data to make the process faster without loosing to much accuracy.
 
 
 \section{Implementation}
 %\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using.\\
+We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using. We then discuss measuring running time\\
 %\end{mdframed}
 
 We are using Python to implement our algorithms as this is our language of choice. \\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report. For each algorithm we will explain how it works and its application and then go on to explain how we implemented it. We then explain the time and space complexity. We finish each section by discussing the results we achieved.\\
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report. For each algorithm we will explain how it works and its different applications and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section by discussing the results we achieved.\\
 
 
 \subsection{Measuring similarity}
-Since a role is represented as a set movies, we can measure the similarity between roles using the Jaccard similarity, where the similarity between two sets $S_1$ and $S_2$.
+An actor has been in a series of movies. This set of movies we will call $S_1$. Another actor has been in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, and it is 0 if the sets are disjoint.
 
 \begin{equation}
-Sim(S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
+\text{Jaccard similarity index} (S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
 \end{equation}
-The Jaccard index falls in the range of 0-1. It is 1 if the sets are similar, and it is 0 if the sets are disjoint.
+
 
 
 \subsection{Measuring Running Time}
@@ -375,7 +375,7 @@ For every band, two signatures have about $1 - (\left(1-s^r \right)$ chance of b
 \section{B-bit}
 B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing alone. It is a modification for min hashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
-In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. See \cite{book:bbit} section 5.1  \\
+In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. See \cite{article:bbit} section 5.1  \\
 
 When we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
 
@@ -396,7 +396,7 @@ $R = $ the resemblance between two objects \\
 $r_1 = $ percentage of total elements in $S_1$ \\
 $r_2 = $ percentage of total elements in $S_2$ \\
 
-In \cite{book:bbit} section 2.3, it is deduced that the improvements from using 64 bits to using 1 bit will at least be 21.3-fold. Let us state that $b_1 = 64$ and $b_2 = 1$, then the improvement ratio between the two will be
+In \cite{article:bbit} section 2.3, it is deduced that the improvements from using 64 bits to using 1 bit will at least be 21.3-fold. Let us state that $b_1 = 64$ and $b_2 = 1$, then the improvement ratio between the two will be
 
 \begin{equation}
     \frac{B(64;R,r_1,r_2)}{B(1;R,r_1,r_2} \Rightarrow \frac{64 R}{R + 1 - r_1}
