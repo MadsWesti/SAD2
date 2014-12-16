@@ -359,7 +359,7 @@ We choose our similarity threshold, $t$, on the x-axis of the S-curve graph. If 
 B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing alone. It is a modification for min hashing.
 
 \subsection{The Variance-Space tradeoff}
-\todo{(variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean. Min egen husker)}
+\todo{variance = how much a set of numbers are spread out. small variance - the points are close to the mean and each other. high variance - the points are spread out and around the mean.}
 
 The variance in our project is a measure of how accurate our results are. So what do we find most important? Accuracy or saving space. What is feasable on a normal pc? The idea is to use 1 or 2 bits to store a sample instead of 64. So on a good day this means we can store 64 times as many samples when converting to 1 bit. So what we loose in accuracy when converting from 64 bits to 1 bit we make up in the amount of samples it is possible to check. This is the tradeoff. This is a bit fluffy but it can be precisely quantified by the storage factor. 
 
