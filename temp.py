@@ -9,20 +9,19 @@ import operator
 file_actors = "data/actors.txt"
 file_roles = "data/roles.txt"
 file_movies = "data/movies.txt"
-number_of_movies_threshold = 0
-min_rank = 0.0
+number_of_movies_threshold = 100
+min_rank = 2.0
 
 ## Naive
 naive = False
 
 ## MinHashing
 minhash = False
-k = 3 # hash functions
+k = 300 # hash functions
 
 ## LSH
-lsh = False
-b = 10 # bands
-bu = 1 # buckets
+lsh = True
+b = 60 # bands
 ### Remember to set the k value in MinHashing
 
 bbit = False
@@ -152,43 +151,44 @@ def create_sig_matrix(matrix, m, n, k):
             hash_value = (a*j+b)%p%m
             if hash_value < signature_matrix[i][pi]:
                 signature_matrix[i][pi] = hash_value
-    return signature_matrix, hashes
+    return signature_matrix
 
 
 def approximate_jaccard_lsh(matrix, movies, actors, K, bands):
     similarity = {}
     n = len(actors)
     m = len(movies)
-    signature_matrix, hash_functions = create_sig_matrix(matrix, m, n, K)
-    M = K
-    r = M/bands
+    signature_matrix = create_sig_matrix(matrix, m, n, K)
+    r = K/bands
     print("   rows per band = " + str(r))
-    c = n #number of signatures
-    p = int(c*bu) #number of buckets
+
     #create buckets
-    buckets = []
-    for i in range(0, bands):
-        buckets.append([])
-        for j in range(0, p):
-            buckets[i].append([])
+    bucket_list = []
 
     #Hash to buckets
     for i in range(0, bands):
-        a, b = hash_functions[i*r]
+        hashtable = {}
+        bucket_list.append(hashtable)
         for j in range(0,n):
             start_index = i*r
             int_list = ''.join(str(x) for x in signature_matrix[j][start_index:start_index+r])
-            hashed_val = (a*int(int_list)+b)%p
-            buckets[i][hashed_val].append(j)
-
+            if int_list in hashtable:
+                hashtable[int_list].append(j)
+            else:
+                hashtable[int_list] = [j]
+    
     #Find candidate pairs
     candidate_pairs = set([])
-    for band in buckets:
-        for bucket in band:
-            for i in bucket:
-                for j in bucket:
-                    if i < j:
-                        candidate_pairs.add((i,j))
+    for hashtable in bucket_list:
+        for key in hashtable:
+            bucket = hashtable[key]
+
+            b_len = len(bucket)
+            if b_len > 1:
+                for i in range(0, b_len):
+                    for j in range(i + 1, b_len):
+                        candidate_pairs.add((bucket[i],bucket[j]))
+    
     print("   Number of candidate pairs: "+str(len(candidate_pairs)))
 
     # calculate similarity between candidate pairs
@@ -207,7 +207,7 @@ def approximate_jaccard_minhash(matrix, movies, actors, k):
     similarity = {}
     n = len(actors)
     m = len(movies)
-    signature_matrix, _ = create_sig_matrix(matrix, m, n, k)
+    signature_matrix = create_sig_matrix(matrix, m, n, k)
     for i in range(0,n):
         for j in range(i + 1, n):
             similarity[actors[i],actors[j]] = 0.0
@@ -224,12 +224,12 @@ def approximate_jaccard_minhash_bbit(matrix, movies, actors, k, b):
     similarity = {}
     n = len(actors)
     m = len(movies)
-    signature_matrix, _ = create_sig_matrix(matrix, m, n, k)
+    signature_matrix = create_sig_matrix(matrix, m, n, k)
 
     for i in range(0, len(signature_matrix)):
         for j in range(0, len(signature_matrix[0])):
             signature_matrix[i][j] = convert_to_bbit(signature_matrix[i][j], b)
-    #calculate similarity1
+    #calculate similarity
     for i in range(0,n):
         for j in range(i + 1, n):
             similarity[actors[i],actors[j]] = 0.0
@@ -287,15 +287,14 @@ if lsh:
     print("Running LSH")
     print("   k (hash functions) = " + str(k))
     print("   bands = " + str(b))
-    print("   bucket fraction = " + str(bu))
-    jaccard_approx = {}
     jaccard_approx = {}
     start = time.time()
     jaccard_approx = approximate_jaccard_lsh(matrix, movies, actors, k, b)
     sorted_jaccard = sorted(jaccard_approx.items(), key=operator.itemgetter(1), reverse=True)
     print("   took "+str(time.time() - start)+" seconds\n")
     for i in range(0,100):
-        print sorted_jaccard[i]
+        if i < len(sorted_jaccard):
+            print sorted_jaccard[i]
 
 if bbit:
     print("Running b-bit")
