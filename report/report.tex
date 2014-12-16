@@ -58,12 +58,14 @@ Say you want to make a movie with a specific actor as the lead role, but the act
 
 You find a similar actor. You find the most similar actor. And for this we must assume that, what defines an actor, is what movies it appears in. So you find the actor that has the most movies in common with your intended actor, and use that actor instead. \\
 
-For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster.
+The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies.\\
+
+For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes to make the process faster without loosing to much accuracy.
 
 
 \section{Implementation}
 \begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-We assume that there is a high correlation between the distinct roles in a movie and the rating the movie receives. Because the success of an actor is dependent on, whether he or she appears in high ranked movies, therefore movies with $rank \leq 7.0$ is purged from the data. Are we keeping our original problem?
+We would like to find a similar actor to replace our unavailable lead actor. To do this we want to find 
 \end{mdframed}
 
 \todo{We are using Python}
