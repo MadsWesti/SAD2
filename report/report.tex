@@ -69,7 +69,7 @@
 \setlength{\parindent}{0cm}
 \setlength{\unitlength}{1mm}
 \date{December 17th 2014\\ IT University of Copenhagen}
-\title{Roles In Movies\\SAD2 Fall 2014}
+\title{Actors In Movies\\SAD2 Fall 2014}
 
 \author{Sarah de Voss\\
 \texttt{satv@itu.dk}
@@ -88,7 +88,7 @@
 \setcounter{page}{1}
 \section{Finding a Similar Actor}
 
-Say you want to make a movie with a specific actor as the lead role, but the actor is unavailable. You have already written the script, and found all the other actors. The only thing missing is the lead actor. \\
+Say you want to make a movie with a specific actor in the leading role, but the actor is unavailable. You have already written the script, and found all the other actors. The only thing missing is the lead actor. \\
 
 You find a similar actor. You find the most similar actor. And for this we must assume that, what defines an actor, is what movies it appears in. So you find the actor that has the most movies in common with your intended actor, and use that actor instead. \\
 
@@ -125,7 +125,7 @@ For every new implementation, we will measure the actual running time. It will b
 
 We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many actors, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 63,594 distinct movies, and 460,428 distinct actors (not counting the movies with nonexisting movie-ids, and also not counting the movies with a ranking of \emph{NULL}).\\
 
-But even though there are 10 more actors per movies many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that a role appears in, it is about 3. This will be taken into account when creating the dummy data. \\
+But even though there are 10 more actors per movies many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that an actor appears in, it is about 3. This will be taken into account when creating the dummy data. \\
 
 One could argue that we could use a minimum rank as a cutoff on the original dataset, to simulate dummy data. But when we generate it randomly ourselves, we have (almost) full control over how many objects are created. \\
 
@@ -140,7 +140,7 @@ An actor is represented as a set of movies\footnote{Corresponding to the ids of 
 a_1 = \{m_1, m_2, m_3, \ldots , m_i\}
 \end{equation}
 
-Instead of storing the actors as sets, for reasons that become more apparent in section \ref{sec:minhashing}, it is beneficial to view the data as a binary characteristic matrix, where the rows are movies, the columns are actors and the values of the matrix defines whether an actor had a role in a given movie or not.\\ 
+Instead of storing the actors as sets, for reasons that become more apparent in section \ref{sec:minhashing}, it is beneficial to view the data as a binary characteristic matrix, where the rows are movies, the columns are actors and the values of the matrix defines whether an actor starred in a given movie or not.\\ 
 
 \begin{figure}[!htbp]
 \begin{eqnarray*}
