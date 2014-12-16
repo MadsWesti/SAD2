@@ -64,13 +64,16 @@ For solving this problem we have created an algorithm that does similarity searc
 
 
 \section{Implementation}
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-We would like to find a similar actor to replace our unavailable lead actor. To do this we want to find 
-\end{mdframed}
+%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
+We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using.\\
+%\end{mdframed}
 
 \todo{We are using Python}
+We are using Python to implement our algorithms as this is our language of choice. We ran into some problems with Python which we will discuss later in the report.\\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report. For each algorithm we will explain how it works and its application and then go on to explain how we implemented it. We then explain the time and space complexity. We finish each section by discussing the results we achieved.\\
+
+
 
 
 \subsection{Measuring similarity}
