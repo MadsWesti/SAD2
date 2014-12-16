@@ -22,11 +22,37 @@
 \usepackage{latexsym}
 \usepackage[T1]{fontenc} % use for allowing < and > in cleartext
 \usepackage{fixltx2e}    % use for textsubscript
+\usepackage[titletoc,title]{appendix}
 \usepackage[framemethod=tikz]{mdframed}
+\usepackage[titletoc,title]{appendix}
 
 \usepackage[margin=2.5cm]{geometry}
 \usepackage[ampersand]{easylist}
 \usepackage{epstopdf}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour},   commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+\lstset{style=mystyle}
+
 
 \bibliographystyle{plain}
 
@@ -415,9 +441,9 @@ In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{
 \section{Conclusion}
 \newpage
 \bibliography{bibliography}
+\begin{appendices}
+\section{Code}
+\lstinputlisting[language=Python]{../temp.py}
+\end{appendices}
 \end{document}
-
-
-
-
 
