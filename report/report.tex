@@ -4,19 +4,14 @@
 \usepackage{mathtools}   % need for subequations
 \usepackage{graphicx}   % need for figures
 \usepackage{verbatim}   % useful for program listings
-\usepackage{color}      % use if color is used in text
-\usepackage{hyperref}  
+\usepackage{color}      % use if color is used in text 
 \usepackage{url}
 \usepackage{todonotes}
 \usepackage{tikz}
 \usetikzlibrary{arrows}
 \usepackage{enumitem}
-\usepackage{hyperref}
 \usepackage{pdfpages}
-\usepackage{caption}
 \usepackage{subcaption}
-\usepackage{listings}
-\usepackage{color}
 \usepackage{amsfonts}
 \usepackage{latexsym}
 \usepackage[T1]{fontenc} % use for allowing < and > in cleartext
@@ -35,7 +30,8 @@
 \def\BState{\State\hskip-\ALG@thistlm}
 \makeatother
 \usepackage{float}
-\usepackage{caption}
+\usepackage[hypcap=false]{caption}
+\usepackage{hyperref}
 \DeclareCaptionFormat{algor}{%
   \hrulefill\par\offinterlineskip\vskip1pt%
     \textbf{#1#2}#3\offinterlineskip\hrulefill}
@@ -45,7 +41,7 @@
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
-\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{backcolour}{rgb}{1.0,1.0,1.0}
 \lstdefinestyle{mystyle}{
   backgroundcolor=\color{backcolour},   commentstyle=\color{codegreen},
   keywordstyle=\color{magenta},
@@ -248,7 +244,7 @@ We simulate $k$ random permutations by creating $k$ number of random hash functi
 The above described method for calculating similarities are described in detail in our pseudo python code in algorithm \ref{alg:minhashing}. This forms the basis for our implementation.
 
 \begin{center}   
-    \captionof{algorithm}{MinHashing algorithm}\label{alg:minhashing}
+    \captionof{algorithm}[hypcap=false]{MinHashing algorithm}\label{alg:minhashing}
     \begin{algorithmic}
     \State $M\gets \text{characteristic matrix dictionary}$
     \State $a\gets \text{actors}$
