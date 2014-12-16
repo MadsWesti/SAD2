@@ -111,28 +111,19 @@ An actor has starred in a series of movies. This set of movies we will call $S_1
 
 
 \subsection{Measuring Running Time}
-\todo{Rewrite to actor}
 \todo{And are we doing this at all?}
 
 For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. If the running time takes longer than our patience permits, we will just put in how long we waited, and note that we did not run it through.\\
 
-\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
-We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many roles, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 57,736 distinct movies, and 553,263 distinct roles (not counting the movies without any roles and roles with nonexisting movie-ids).\\
+We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many actors, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 63,594 distinct movies, and 460,428 distinct actors (not counting the movies with nonexisting movie-ids, and also not counting the movies with a ranking of \emph{NULL}).\\
 
-\todo{rewrite actor}
-But even though there are 10 more roles per movies. Many of these roles are only in one movie, and only few roles are in many movies. If we calculate the average number of movies, that a role appears in, it is somewhere between 1.2 and 2.0, depending on what our cut-off rank is (see figure ~\ref{fig:sparsenesscutoff}. We have defined our minimum rank cutoff to movies with at least 7.0 in rank, which corresponds to an average of 1.7 movies per role. This has influence on the characteristic matrix, that we create when parsing.
-\end{mdframed}
-This will be taken into account when creating our random dummy data.
+But even though there are 10 more actors per movies. Many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that a role appears in, it is about 3. This will be taken into account when creating the dummy data. \\
 
-\begin{figure}[!htbp]
-    \begin{center}
-        \input{plots/ones_per_role.tex}
-        \caption{Sparseness with cutoff}
-        \label{fig:sparsenesscutoff}
-    \end{center}
-\end{figure}
+One could argue that we could use a minimum rank as a cutoff on the original dataset, to simulate dummy data. But when we generate it randomly ourselves, we have (almost) full control over how many objects are created. \\
+
 
 \subsection{Naïve Implementation}
+
 
 \subsubsection{Data representation}
 An actor is represented as a set of movies\footnote{Corresponding to the ids of the movies, which are integers} the specific actor appear in.
@@ -243,7 +234,7 @@ We simulate $k$ random permutations by creating $k$ number of random hash functi
 We still have to permute all pairs of roles, but the number of comparisons is reduced to $k$, the new running time is therefore $O(n^2 \cdot k)$ compared to $O(n^2 \cdot m)$ of the naïve solution, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
 
 \subsection{Actual Running Times}
-In figure ~\ref{fig:minhashing_at} the actual running times can be seen with different values for $k$.
+In figure ~\ref{fig:minhashing_at} the actual running times can be seen with different values for $k$. The running time for the naive solution is also plotted in this graph so one can see the difference in performance. \\
 
 
 \begin{figure}[!htpb]
@@ -404,6 +395,7 @@ For every band, two signatures have about $1 - (\left(1-s^r \right)$ chance of b
 
 
 \subsection{Actual Running Time}
+The actual running times of LSH can be seen in figure  \ref{fig:lsh_at} .
 
 \begin{figure}[!htpb]
     \begin{center}
@@ -457,7 +449,7 @@ In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{
 
 
 \subsection{Running Time}
-Our implementation of the b-bit algorithm does not succesfully run on the imdb dataset, only on our dummy data. Part of the reasom for this is that we have not been able to implement a data type with a small enough overhead. So instead of our data actually taking up less space, it takes up the same space, and furthermore additional processing is done to it. See figure \ref{fig:bbit_at}\\
+Our implementation of the b-bit algorithm does not succesfully run on the imdb dataset, only on our dummy data. Part of the reasom for this is that we have not been able to implement a data type with a small enough overhead. So instead of our data actually taking up less space, it takes up the same space, and furthermore additional processing is done to it. See figure \ref{fig:bbit_at} for the actual running times.\\
 
 \begin{figure}[!htpb]
     \begin{center}
