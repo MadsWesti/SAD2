@@ -301,7 +301,7 @@ In figure ~\ref{fig:minhashing_at} the actual running times can be seen with dif
 
 
 \section{Locality Sensitive Hashing (LSH)}
-Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then hash the vectors into a large number of buckets, in such a way that if two vectors hash to the same bucket they are similar. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then save the vectors into a hashtable (here referred to as a bucket), in such a way that if two vectors are similar, they are put in the bucket. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
 
 In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into two bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. If a signature is in one or more buckets it is a candidate signature to be checked for similarity, whereas if a signature is only in red buckets, which have only one or zero signatures, it is discarded as a candidate signature. \\
 
@@ -423,22 +423,25 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
 \subsection{Analysis}
 In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
-In some problems, it is important to have no false negatives, or no false positives. In these problems the $r$ and $b$ tuning parameters can be chosen lower or higher, to match the probability. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot. In this project we would rather like false positives than false negatives. To achieve a higher amount of false positives, we could adjust the threshold to be higher by changing $r$ or $b$. This would mean that the similarity must be higher than before, to get the same probability. \\
+By tuning $r$ and $b$, we can state how similar we will allow pairs to be. In the figure \ref{fig:scurve} is plotted three curves of the formula \ref{eq:s} with different $r$, and $b$ values. These are plots of the probability that two signatures will become candidate pairs. At the point on the curves where the value on the y-axis is 0.5, is the \emph{threshold} point\footnote{This is about the point where the curve is the steepest}. When we have a pair with a similarity equivalent to this point, we know that there is a $50\%$ probability that is will become a candidate pair. \\
 
 \begin{equation}
     \text {Probability} = 1 - (1 - s^r)^b 
     \label{eq:s}
 \end{equation}\\
 
+If we bring this curve further to the right - using our tuning parameters $r$, and $b$ - a pair would need to have a higher similarity to have a probability of becoming a candidate pair. To approximately find the threshold point, equation \ref{eq:s-estimate} can be used.  \\
+
+
 \begin{figure}[!htpb]
     \begin{center}
         \input{plots/scurve.tex}
-        \caption{S-curve}
+        \caption{S-curve - $f(s) = 1 - (1 - s^r)^b$}
         \label{fig:scurve}
     \end{center}
 \end{figure}
 
-When choosing $t$ according to equation \ref{eq:s-estimate} - which is what we do in this project - the probability (equation \ref{eq:s}) of becoming a candidate pair is around $0.63$, no matter what $b$ and $r$ is set to. \\
+The three S-curves in figure \ref{fig:scurve} have the following threshold values, $[0.63, 0.82, 0.86]$, which means that on the curve with threshold $0.63$\footnote{with $b=10$ and $r=100$}, if we have a pair with similarity $0.5$, there is $63\%$ chance of it becoming a candidate pair. \\
 
 For every band, two signatures have about $1 - (\left(1-s^r \right)$ chance of being regarded as similar, which is not necessarily much. But there are $b$ bands in which this is applicable, which raises the chance of the two whole signatures becoming candidates.
 
@@ -464,15 +467,15 @@ The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together 
 \section{B-bit}
 B-bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
-In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. See \cite{article:bbit} section 5.1  \\
+In our project we have found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This means we can not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. This is proposed in \cite{article:bbit} section 5.1. Though we have not been able to implement this, and therefore our b-bit is nonfunctional. \\
 
-When we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
+If we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
 
 Say we had some hardware that could do boolean comparisons faster than integer comparisons, then a b-bit implementation could utilize this functionality. But that is out of scope of this course. \\
 
 
 \subsection{The Variance-Space tradeoff}
-The variance in our project is a measure of how accurate our results are. We can store about 64 times as many samples when converting to 1 bit, but we lose some accuracy. This is the tradeoff, and can be precisely quantified by the storage factor, which calculates the ratio of the  storage. See equation \ref{storagefactor}.
+The variance in our project is a measure of how accurate our results are. We can store about 64 times as many samples when converting to 1 bit, but we lose some accuracy. This is the tradeoff, and can be precisely quantified by the storage factor, which calculates the ratio of the  storage. See equation \ref{eq:storagefactor}.
 
 \begin{equation}
     \text {Storage factor} = B(b;R,r_1,r_2)
