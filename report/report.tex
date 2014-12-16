@@ -379,7 +379,7 @@ For every band, two signatures have about $1 - (\left(1-s^r \right)$ chance of b
 \section{B-bit}
 B-bit min hashing is a way to estimate set similarity in a more storage efficient way than with min hashing alone. It is a modification for min hashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
-In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. See \cite{book:bbit} section 5.1  \\
+In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. See \cite{article:bbit} section 5.1  \\
 
 When we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
 
@@ -401,7 +401,7 @@ $R = $ the resemblance between two objects \\
 $r_1 = $ percentage of total elements in $S_1$ \\
 $r_2 = $ percentage of total elements in $S_2$ \\
 
-In \cite{book:bbit} section 2.3, it is deduced that the improvements from using 64 bits to using 1 bit will at least be 21.3-fold. Let us state that $b_1 = 64$ and $b_2 = 1$, then the improvement ratio between the two will be
+In \cite{article:bbit} section 2.3, it is deduced that the improvements from using 64 bits to using 1 bit will at least be 21.3-fold. Let us state that $b_1 = 64$ and $b_2 = 1$, then the improvement ratio between the two will be
 
 \begin{equation}
     \frac{B(64;R,r_1,r_2)}{B(1;R,r_1,r_2} \Rightarrow \frac{64 R}{R + 1 - r_1}
