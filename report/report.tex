@@ -102,13 +102,13 @@ We would like to find a similar actor to replace our unavailable lead actor. Whe
 
 We are using Python to implement our algorithms as this is our language of choice. \\
 
-We will look at the naive solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit}, which is the extension to our report.\\
+We will look at the \emph{naive} solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-Bit}, which is the extension to our report.\\
 
-For each algorithm we will explain how it works and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section with a section about the actual running time and the correctness of the implementation. \\
+For each implementation we will explain how it works and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section with a section about the actual running time and the correctness of the implementation. \\
 
 
 \subsection{Measuring similarity}
-An actor has starred in a series of movies. This set\footnote{To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles} of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint.
+An actor has starred in a series of movies. This set\footnote{To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles} of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint. 
 
 \begin{equation}
 J (S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
@@ -199,7 +199,7 @@ Signatures are produced by first permuting the rows in the characteristic matrix
 \subsection{Permutations and the Simulating of These}
 Since the permutation of such a large matrix as the characteristic matrix is infeasible on a computer, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. These will simulate permutations of the whole matrix.\\
 
-Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
+Remarkably, the probability that the Minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
 
     $x = $ the rows in which the two sets both have a 1. \\
     $y = $ the rows in which one of the sets have a 1. \\
@@ -331,11 +331,12 @@ The variance of the minhashed Jaccard values can be calculated using equation \r
 Where $\hat{J} = \frac{|S_1 \cap S_2|}{k}$.
 
 \section{Locality Sensitive Hashing (LSH)}
-Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take each signature produced by min hashing and chop them up into shorter vectors $S_j = \{v_0, v_1, \ldots v_{b-1}\}$, by dividing the total number of rows into $b$ bands of $r$ rows. We then put the ids of the signature into a list of hash tables, one for each band. This is done in such a way that if two vectors are similar for a given band, they id of their signature is put into the same bucket. If a bucket has two or more vectors in it, then the signatures with these ids become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
+
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take each signature produced by MinHashing and chop them up into shorter vectors $S_j = \{v_0, v_1, \ldots v_{b-1}\}$, by dividing the $k$ number of rows into $b$ bands of $r$ rows. We then put the ids of the signature into a list of hash tables, one for each band. This is done in such a way that if two vectors are similar for a given band, they are put into the same bucket. If a bucket has two or more vectors in it, then the signatures with these ids become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check.\\
 
 In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into two bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. If a signature is in one or more buckets it is a candidate signature to be checked for similarity, whereas if a signature is only in red buckets, which have only one or zero signatures, it is discarded as a candidate signature. \\
 
-So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded signatures are $S_2, S_5$.
+So the candidate pairs are $(S_0, S_1), (S_0, S_6), (S_1, S_6), (S_3, S_4)$.
 
 \begin{figure}[H]
     \begin{center}
@@ -442,7 +443,7 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
     \end{center}
 \end{figure}
 
-In our algorithm, we concatenate the integers of the r rows into a single string and then uses this as a key for a dictionary, which is essentially a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the hash table we add the signature id to the existing bucket. The pseudo code in algorithm \ref{alg:lsh}describes this.
+In our algorithm, we concatenate the integers of the $r$ rows into a single string and then use this as a key for a dictionary, which is essentially a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the hash table we add the signature id to the existing bucket. The pseudo code in algorithm \ref{alg:lsh} describes this.
 
 
 
