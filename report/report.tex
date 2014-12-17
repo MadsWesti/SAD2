@@ -490,7 +490,7 @@ In our algorithm, we concatenate the integers of the $r$ rows into a single stri
 \end{center}
 
 \subsection{Analysis}
-The hashing to buckets is $\Theta(n\cdot m)$, whereas the the creation of candidate pairs is $O(n^2 \cdot b)$, since, if for all bands, the vectors hash to the same bucket we would get all possible pairs of signature ids for each band, which in turn would mean we would have to permute and check for existence in the $candidate_pairs$ set\footnote{This step could possibly be included in the hashing of buckets}. The actual calculation of similarities time complexity would then be the same as minhashing similarity calculation $O(n^2 \cdot k)$ and since $k>b$ this will dominate the running time. This is the case where all documents are exactly similar, hopefully this is not the case and we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
+The hashing to buckets takes $\Theta(n\cdot m)$, whereas the the creation of candidate pairs takes $O(n^2 \cdot b)$, since, if for all bands, the vectors hash to the same bucket we would get all possible pairs of signature ids for each band, which in turn would mean we would have to permute and check for existence in the $candidate\_pairs$ set\footnote{This step could possibly be included in the hashing of buckets}. The actual calculation of similarities time complexity would then be the same as MinHashing similarity calculation $O(n^2 \cdot k)$ and since $k>b$ this will dominate the running time. This is the case where all documents are exactly similar, hopefully this is not the case and we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
 By tuning $r$ and $b$, we can state how similar we will allow pairs to be. In the figure \ref{fig:scurve} is plotted three curves of the formula \ref{eq:s} with different $r$, and $b$ values. These are plots of the probability that two signatures will become candidate pairs. At the point on the curves where the value on the y-axis is 0.5, is the \emph{threshold} point\footnote{This is about the point where the curve is the steepest}. When we have a pair with a similarity equivalent to this point, we know that there is a $50\%$ probability that is will become a candidate pair. \\
 
@@ -510,7 +510,7 @@ If we bring this curve further to the right - using our tuning parameters $r$, a
     \end{center}
 \end{figure}
 
-The three S-curves in figure \ref{fig:scurve} have the following threshold values, $[0.63, 0.82, 0.86]$, which means that on the curve with threshold $0.63$\footnote{with $b=10$ and $r=100$}, if we have a pair with similarity $0.5$, there is $63\%$ chance of it becoming a candidate pair. \\
+The three S-curves in figure \ref{fig:scurve} have the following threshold values, $[0.63, 0.82, 0.86]$, which means that on the curve with threshold $0.63$\footnote{with $b=10$ and $r=100$}, if we have a pair with similarity $0.63$, there is $50\%$ chance of it becoming a candidate pair. \\
 
 For every band, a pair has about $1 - (\left(1-s^r \right)$ chance of being regarded as similar, which is not necessarily much. But there are $b$ bands in which this is applicable, which raises the chance of the pair becoming a candidate pair. \\
 

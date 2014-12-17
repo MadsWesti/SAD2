@@ -17,6 +17,5 @@ g(x) = 1-(1-x**r2)**b2
 h(x) = 1-(1-x**r3)**b3
 plot f(x) with lines linestyle 1 title 'r=25, b=40', \
     g(x) with lines  title 'r=20, b=50' linestyle 2, \
-    h(x) with lines  title 'r=10, b=100' linestyle 3, \
-    'scurve.dat' with points notitle
+    h(x) with lines  title 'r=10, b=100' linestyle 3
 
