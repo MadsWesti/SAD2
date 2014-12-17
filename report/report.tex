@@ -69,7 +69,7 @@
 \setlength{\parindent}{0cm}
 \setlength{\unitlength}{1mm}
 \date{December 17th 2014\\ IT University of Copenhagen}
-\title{Roles In Movies\\SAD2 Fall 2014}
+\title{Actors In Movies\\SAD2 Fall 2014}
 
 \author{Sarah de Voss\\
 \texttt{satv@itu.dk}
@@ -88,11 +88,11 @@
 \setcounter{page}{1}
 \section{Finding a Similar Actor}
 
-Say you want to make a movie with a specific actor as the lead role, but the actor is unavailable. You have already written the script, and found all the other actors. The only thing missing is the lead actor. \\
+Say you want to make a movie with a specific actor in the leading role, but the actor is unavailable. You have already written the script, and found all the other actors. The only thing missing is the lead actor. \\
 
 You find a similar actor. You find the most similar actor. And for this we must assume that, what defines an actor, is what movies it appears in. So you find the actor that has the most movies in common with your intended actor, and use that actor instead. \\
 
-The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $a$ is the number of actors and $m$ is the number of movies. This gives us $2.6\cdot 10^{17}$ comparisons!\\
+The size of a database expands every day with new entries. The IMDB (Intenet Movie Database) contains at this moment 817718 actors and 388215 movies. Checking for comparisons is labourous work even for a pc. The amount of comparisons is $O(a^2\cdot m)$ where $n$ is the number of actors and $m$ is the number of movies. This gives us $2.6\cdot 10^{17}$ comparisons!\\
 
 For solving this problem we have created an algorithm that does similarity search through the \emph{IMDB database} and implemented different approximation schemes and compressed data to make the process faster without loosing too much accuracy.
 
@@ -104,13 +104,13 @@ We would like to find a similar actor to replace our unavailable lead actor. Whe
 
 We are using Python to implement our algorithms as this is our language of choice. \\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.\\
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit}, which is the extension to our report.\\
 
-For each algorithm we will explain how it works and its different applications and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section by discussing the results we achieved.\\
+For each algorithm we will explain how it works and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section with a discussion.\\
 
 
 \subsection{Measuring similarity}
-An actor has starred in a series of movies. This set of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint.
+An actor has starred in a series of movies. This set\footnote{To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles} of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint.
 
 \begin{equation}
 \text{Jaccard similarity index} (S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
@@ -125,13 +125,13 @@ For every new implementation, we will measure the actual running time. It will b
 
 We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many actors, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 63,594 distinct movies, and 460,428 distinct actors (not counting the movies with nonexisting movie-ids, and also not counting the movies with a ranking of \emph{NULL}).\\
 
-But even though there are 10 more actors per movies many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that a role appears in, it is about 3. This will be taken into account when creating the dummy data. \\
+But even though there are 10 more actors per movies many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that an actor appears in, it is about 3. This will be taken into account when creating the dummy data. \\
 
 One could argue that we could use a minimum rank as a cutoff on the original dataset, to simulate dummy data. But when we generate it randomly ourselves, we have (almost) full control over how many objects are created. \\
 
 
 \subsection{Naïve Implementation}
-
+Our starting point is to implement the naive solution, which has time complexity $O(n^2m)$, which is impossible to run on a normal laptop computer within the time span of this project. The correctness of this solution will be $100\%$.\\
 
 \subsubsection{Data representation}
 An actor is represented as a set of movies\footnote{Corresponding to the ids of the movies, which are integers} the specific actor appear in.
@@ -140,7 +140,7 @@ An actor is represented as a set of movies\footnote{Corresponding to the ids of 
 a_1 = \{m_1, m_2, m_3, \ldots , m_i\}
 \end{equation}
 
-Instead of storing the actors as sets, for reasons that become more apparent in section \ref{sec:minhashing}, it is beneficial to view the data as a binary characteristic matrix, where the rows are movies, the columns are actors and the values of the matrix defines whether an actor had a role in a given movie or not.\\ 
+Instead of storing the actors as sets, for reasons that become more apparent in section \ref{sec:minhashing}, it is beneficial to view the data as a binary characteristic matrix, where the rows are movies, the columns are actors and the values of the matrix defines whether an actor starred in a given movie or not.\\ 
 
 \begin{figure}[!htbp]
 \begin{eqnarray*}
@@ -180,7 +180,7 @@ The naïve solution \todo{reference til koden} is calculating the Jaccard simila
 J(S_1,S_2) = \frac{x}{x+y}
 \end{equation}
 
-Because we have to permute every possible pair of actors and for each pair check if they appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$ is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
+Because we have to construct every possible pair of actors and for each pair check if they appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$ is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
 
 \subsubsection{Actual Running Time}
 The actual running time with the naïve implementation takes too long for our normal laptop computer and outruns our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}. This figure is not very exciting in itself, but when we plot it together with the actual running times for the other implementations like MinHashing and Locality Sensitive Hashing, it will show how bad the naive implementation is. \\
@@ -193,6 +193,7 @@ The actual running time with the naïve implementation takes too long for our no
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
 
 \section{MinHashing}\label{sec:minhashing}
 MinHashing is a way of compressing the information stored in the characteristic matrix into space efficient signatures without loosing too much accuracy. MinHashing reduces the number of rows in the characteristic matrix. The number of columns stays the same.\\
@@ -200,7 +201,7 @@ MinHashing is a way of compressing the information stored in the characteristic 
 Signatures are produced by first permuting the rows in the characteristic matrix. After the rows have been permuted we proceed by looking at the first column where we search until we find the first 1 where we read the index number. We do this for all columns. The signature is then the list of index numbers. This signature matrix is one row. To gain more accuracy we can permute the rows $k$ times and repeat the search for 1s. $k$ is the number of rows in the signiture matrix.
 
 \subsection{Permutations and the simulating of these}
-Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles\todo{Slightly irrelevant}. \\
+Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. \\
 
 Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
 
@@ -241,7 +242,7 @@ We simulate $k$ random permutations by creating $k$ number of random hash functi
     \label{fig:signature_matrix}
 \end{figure}
 
-The above described method for calculating similarities are described in detail in our pseudo python code in algorithm \ref{alg:minhashing}. This forms the basis for our implementation.
+The above described method for calculating similarities are described in detail in our pseudo code in algorithm \ref{alg:minhashing}. This forms the basis for our implementation.
 
 \begin{center}   
     \captionof{algorithm}[hypcap=false]{MinHashing algorithm}\label{alg:minhashing}
@@ -300,9 +301,10 @@ In figure ~\ref{fig:minhashing_at} the actual running times can be seen with dif
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
 
 \section{Locality Sensitive Hashing (LSH)}
-Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then hash the vectors into a large number of buckets, in such a way that if two vectors hash to the same bucket they are similar. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then save the vectors into a hashtable (here referred to as a bucket), in such a way that if two vectors are similar, they are put in the bucket. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
 
 In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into two bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. If a signature is in one or more buckets it is a candidate signature to be checked for similarity, whereas if a signature is only in red buckets, which have only one or zero signatures, it is discarded as a candidate signature. \\
 
@@ -325,7 +327,7 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
 
             % The overbrace
             \draw (10.5, 4.5) node {$\overbrace{\qquad\qquad\qquad\qquad\qquad\qquad\qquad\qquad}$};
-            \draw (10.5,5.5) node {buckets};
+            \draw (10.5,5.0) node {buckets};
 
             % Signature matrix (left part)
             \draw (0.5,3.5) node {1};
@@ -391,28 +393,20 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
 
 
             % Arrows
-            \path[-] (8,-.1) edge [bend left] (6,-1);
-            \path[->] (6,-1) edge [bend right] (4,-2);
-            \path[->] (10,-.1) edge [bend right] (9,-2);
+            \path[-] (8,-.1) edge [bend left] (6.5,-1);
+            \path[->] (6.5,-1) edge [bend right] (5,-2);
 
             % Candidate squares
-            \path[fill=green!50] (3.1, -4.0) rectangle (4.9, -2.2);
-            \path[fill=red!30] (8.1, -4.0) rectangle (9.9, -2.2);
-            \draw (3,-4.1) rectangle (5,-2.1);
-            \draw (8,-4.1) rectangle (10,-2.1);
+            \path[fill=green!50] (3.1, -3.5) rectangle (6.9, -2.2);
+            \draw (3,-3.6) rectangle (7,-2.1);
 
             % Candidate signatures
-            \draw (3.5,-2.5) node {$S_0$};
-            \draw (3.5,-3.5) node {$S_1$};
-            \draw (4.5,-2.5) node {$S_3$};
-            \draw (4.5,-3.5) node {$S_4$};
-            \draw (4.0,-3) node {$S_6$};
+            \draw (4,-2.5) node {$(S_0, S_1)$};
+            \draw (4,-3.0) node {$(S_0, S_6)$};
+            \draw (6,-3.0) node {$(S_1, S_6)$};
+            \draw (6,-2.5) node {$(S_3, S_4)$};
 
-            \draw (9.5,-3) node {$S_5$};
-            \draw (8.5,-3) node {$S_2$};
-
-            \draw (9,-4.5) node {Non-candidate signatures};
-            \draw (4,-4.5) node {Candidate signatures};
+            \draw (5,-4.0) node {Candidate pairs};
             
 
         \end{tikzpicture}
@@ -424,24 +418,30 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
 \subsection{Analysis}
 In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix\todo{incorrect}, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
-In some problems, it is important to have no false negatives, or no false positives. In these problems the $r$ and $b$ tuning parameters can be chosen lower or higher, to match the probability. We can plot the probability of a particular pair becoming a candidate pair by using the S-curve equation, see figure \ref{fig:scurve} for the plot. In this project we would rather like false positives than false negatives. To achieve a higher amount of false positives, we could adjust the threshold to be higher by changing $r$ or $b$. This would mean that the similarity must be higher than before, to get the same probability. \\
+By tuning $r$ and $b$, we can state how similar we will allow pairs to be. In the figure \ref{fig:scurve} is plotted three curves of the formula \ref{eq:s} with different $r$, and $b$ values. These are plots of the probability that two signatures will become candidate pairs. At the point on the curves where the value on the y-axis is 0.5, is the \emph{threshold} point\footnote{This is about the point where the curve is the steepest}. When we have a pair with a similarity equivalent to this point, we know that there is a $50\%$ probability that is will become a candidate pair. \\
 
 \begin{equation}
     \text {Probability} = 1 - (1 - s^r)^b 
     \label{eq:s}
 \end{equation}\\
 
+If we bring this curve further to the right - using our tuning parameters $r$, and $b$ - a pair would need to have a higher similarity to have a probability of becoming a candidate pair. To approximately find the threshold point, equation \ref{eq:s-estimate} can be used.  \\
+
+
 \begin{figure}[H]
     \begin{center}
         \input{plots/scurve.tex}
-        \caption{S-curve}
+        \caption{S-curve - $f(s) = 1 - (1 - s^r)^b$}
         \label{fig:scurve}
     \end{center}
 \end{figure}
 
-When choosing $t$ according to equation \ref{eq:s-estimate} - which is what we do in this project - the probability (equation \ref{eq:s}) of becoming a candidate pair is around $0.63$, no matter what $b$ and $r$ is set to. \\
+The three S-curves in figure \ref{fig:scurve} have the following threshold values, $[0.63, 0.82, 0.86]$, which means that on the curve with threshold $0.63$\footnote{with $b=10$ and $r=100$}, if we have a pair with similarity $0.5$, there is $63\%$ chance of it becoming a candidate pair. \\
 
-For every band, two signatures have about $1 - (\left(1-s^r \right)$ chance of being regarded as similar, which is not necessarily much. But there are $b$ bands in which this is applicable, which raises the chance of the two whole signatures becoming candidates.
+For every band, a pair has about $1 - (\left(1-s^r \right)$ chance of being regarded as similar, which is not necessarily much. But there are $b$ bands in which this is applicable, which raises the chance of the pair becoming a candidate pair. \\
+
+There is always a probability of a similar pair not becoming a candidate pair and vice versa. These are false negatives and false positives. False positives will be chosen as candidate pairs without being similar, and false negatives will not be chosen as candidates even though they are similar. The S-curve can be tuned to match a high probability for either false positives or false negatives, depending on what is important to the problem. \todo{Hvad er vigtigst i dette project?}\\
+
 
 \begin{equation}
     s = (1/b)^{1/r}
@@ -462,12 +462,14 @@ The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together 
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
+
 \section{B-bit}
 B-bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
-In our project we found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This meant we could not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. See \cite{article:bbit} section 5.1  \\
+In our project we have found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This means we can not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. This is proposed in \cite{article:bbit} section 5.1. Though we have not been able to implement this, and therefore our b-bit is nonfunctional. \\
 
-When we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
+If we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
 
 Say we had some hardware that could do boolean comparisons faster than integer comparisons, then a b-bit implementation could utilize this functionality. But that is out of scope of this course. \\
 
@@ -519,11 +521,14 @@ Our implementation of the b-bit algorithm does not succesfully run on the imdb d
 \subsection{LSH versus b-Bit}
 These two algorithms are both modifications to MinHashing. How do they compare to each other? Performance. What are their strengths?
 
-\section{Odd Sketch}
-Odd Sketch is good when you want to improve precision when the Jaccard similarity index is close to 1. It can provide a short list and ranking over the most similar items.
+\subsection{Discussion}
 
-\subsection{b-Bit versus Odd Sketch}
+\section{Future Work}
+Odd Sketch is good when you want to improve precision when the Jaccard similarity index is close to 1. It can provide a short list and ranking over the most similar items. \\
 
+
+
+\subsection{Discussion}
 
 \section{Conclusion}
 \newpage
