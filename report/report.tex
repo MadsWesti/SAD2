@@ -119,7 +119,6 @@ An actor has starred in a series of movies. This set\footnote{To compare sets of
 
 
 \subsection{Measuring Running Time}
-\todo{And are we doing this at all?}
 
 For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. If the running time takes longer than our patience permits, we will just put in how long we waited, and note that we did not run it through.\\
 
@@ -193,7 +192,6 @@ The actual running time with the naïve implementation takes too long for our no
     \end{center}
 \end{figure}
 
-\subsection{Discussion}
 
 \section{MinHashing}\label{sec:minhashing}
 MinHashing is a way of compressing the information stored in the characteristic matrix into space efficient signatures without loosing too much accuracy. MinHashing reduces the number of rows in the characteristic matrix. The number of columns stays the same.\\
@@ -302,6 +300,10 @@ In figure ~\ref{fig:minhashing_at} the actual running times can be seen with dif
 \end{figure}
 
 \subsection{Discussion}
+The MinHashing implementation is much faster than the naive, but we sacrifice some correctness. With the number of hash functions $k$, we can tune the correctness up or down, which will also inflict the running time, as seen in figure \ref{fig:minhashing_at}. \\
+
+This implementation still takes a long time to run on the \emph{IMDB} dataset, and so further compression/approximation will have to be used. \\
+
 
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then save the vectors into a hashtable (here referred to as a bucket), in such a way that if two vectors are similar, they are put in the bucket. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
@@ -476,7 +478,7 @@ If we bring this curve further to the right - using our tuning parameters $r$, a
 \begin{figure}[H]
     \begin{center}
         \input{plots/scurve.tex}
-        \caption{S-curve - $f(s) = 1 - (1 - s^r)^b$}
+        \caption{S-curve - $f(s) = 1 - (1 - s^r)^b$ ; $k = 1000$}
         \label{fig:scurve}
     \end{center}
 \end{figure}
@@ -485,7 +487,7 @@ The three S-curves in figure \ref{fig:scurve} have the following threshold value
 
 For every band, a pair has about $1 - (\left(1-s^r \right)$ chance of being regarded as similar, which is not necessarily much. But there are $b$ bands in which this is applicable, which raises the chance of the pair becoming a candidate pair. \\
 
-There is always a probability of a similar pair not becoming a candidate pair and vice versa. These are false negatives and false positives. False positives will be chosen as candidate pairs without being similar, and false negatives will not be chosen as candidates even though they are similar. The S-curve can be tuned to match a high probability for either false positives or false negatives, depending on what is important to the problem. \todo{Hvad er vigtigst i dette project?}\\
+There is always a probability of a similar pair not becoming a candidate pair and vice versa. These are false negatives and false positives. False positives will be chosen as candidate pairs without being similar, and false negatives will not be chosen as candidates even though they are similar. The S-curve can be tuned to match a high probability for either false positives or false negatives, depending on what is important to the problem. \\
 
 
 \begin{equation}
@@ -497,8 +499,6 @@ There is always a probability of a similar pair not becoming a candidate pair an
 \subsection{Actual Running Time}
 The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together with the naive running time, and one of the running times for MinHashing. This way one can see the change in performance.
 
-\todo{Skal vi lave comparison af correctness?}
-
 \begin{figure}[H]
     \begin{center}
         \input{plots/lsh_at.tex}
@@ -507,7 +507,34 @@ The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together 
     \end{center}
 \end{figure}
 
-\subsection{Discussion}
+\subsection{Correctness}
+In the following table \ref{tab:lsh-correctness} the top 10 similar pairs from the LSH implementation can be seen together with their actual Jaccard similarities. This was run on dummy data with $k = 1000$, and $b = 100$. This gives us a threshold of $t = (1/b)^{1/r} = 0.63$, which indicates that if a pair has similarity 0.63, there is 50\% chance for it to get selected.  \\
+
+The similarities that LSH outputs is really similarities calculated by the MinHashing algorithm, including false positives and excluding false negatives from the LSH implementation. \\
+
+\begin{figure}[H]
+    \begin{center}
+        \begin{tabular}{c|c|c}
+              & Actual & LSH \\
+            \hline
+            1 & 1.0 & 1.0 \\
+            2 & 1.0  & 1.0 \\
+            3 & 0.667 & 0.702 \\
+            4 & 0.667 & 0.695 \\
+            5 & 0.667 & 0.689 \\
+            6 & 0.667 & 0.684 \\
+            7 & 0.667 & 0.681 \\
+            8 & 0.667 & 0.681 \\
+            9 & 0.667 & 0.677 \\
+            10 & 0.667 & 0.673 
+        \end{tabular}
+        \caption{Correctness of LSH}
+        \label{tab:lsh-correctness}
+    \end{center}
+\end{figure}
+
+The performance boost in implementing LSH is satisfying. This implementation, we can actually run on the \emph{IMDB} dataset within minutes on a normal laptop. \\
+
 
 \section{B-bit}
 B-bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
@@ -540,7 +567,7 @@ In \cite{article:bbit} section 2.3, it is deduced that the improvements from usi
     \label{eq:improvementratio}
 \end{equation}
 
-In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{64}{1}$. In the worst case, the resemblance, $R=.5$, and $r_1, r_2 \rightarrow 0$ the ratio will be $\frac{64}{3} \sim 21.3$. See figure \ref{fig:bbit} to see a graph from \cite{article:bbit} which shows the storage improvements with different parameters. \\
+In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{64}{1}$. In the worst case, the resemblance, $R=.5$, and $r_1, r_2 \rightarrow 0$ the ratio will be $\frac{64}{3} \sim 21.3$. See figure \ref{fig:bbit} to see a graph from \cite{article:bbit} which shows the storage improvements with different parameters, also with different values for $b$. \\
 
 
 \begin{figure}[H]
@@ -564,18 +591,18 @@ Our implementation of the b-bit algorithm does not succesfully run on the imdb d
 \end{figure}
 
 \subsection{LSH versus b-Bit}
-These two algorithms are both modifications to MinHashing. How do they compare to each other? Performance. What are their strengths?
-
-\subsection{Discussion}
+These two algorithms are both extensions to MinHashing. In the worst case b-Bit has a 21-fold improvement in space complexity in comparison to how the data is saved in LSH. As long as the $k$ value is large enough, b-Bit will have about the same correctness as LSH. \todo{k-value - er det rigtigt nok}
 
 \section{Future Work}
 Odd Sketch is good when you want to improve precision when the Jaccard similarity index is close to 1. It can provide a short list and ranking over the most similar items. \\
 
 
-
-\subsection{Discussion}
-
 \section{Conclusion}
+By using MinHashing and Locality Sensitive Hashing, we got a pretty good approximation of similar pairs in the \emph{IMDB} dataset within a time span that was acceptable. It seems like b-bit could have made it faster, or at least more space efficient, but a succesful implementation was not reachable before the project handin. \\
+
+The correctness of the MinHashing and LSH implementations were acceptable. \\
+
+
 \newpage
 \bibliography{bibliography}
 \begin{appendices}
