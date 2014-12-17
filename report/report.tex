@@ -98,15 +98,13 @@ For solving this problem we have created an algorithm that does similarity searc
 
 
 \section{Implementation}
-%\begin{mdframed}[hidealllines=true,backgroundcolor=blue!20]
 We would like to find a similar actor to replace our unavailable lead actor. When is an actor similar to another? We start by discussing similarity and which similarity measure we are using. We then discuss measuring running time.\\
-%\end{mdframed}
 
 We are using Python to implement our algorithms as this is our language of choice. \\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit}, which is the extension to our report.\\
+We will look at the naive solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit}, which is the extension to our report.\\
 
-For each algorithm we will explain how it works and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section with a discussion.\\
+For each algorithm we will explain how it works and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section with a section about the correctness of the implementation. \\
 
 
 \subsection{Measuring similarity}
@@ -129,7 +127,7 @@ But even though there are 10 more actors per movies many of these actors are onl
 One could argue that we could use a minimum rank as a cutoff on the original dataset, to simulate dummy data. But when we generate it randomly ourselves, we have (almost) full control over how many objects are created. \\
 
 
-\subsection{Naïve Implementation}
+\subsection{Naive Implementation}
 Our starting point is to implement the naive solution, which has time complexity $O(n^2m)$, which is impossible to run on a normal laptop computer within the time span of this project. The correctness of this solution will be $100\%$.\\
 
 \subsubsection{Data representation}
@@ -173,7 +171,7 @@ ratio &= \frac{1323388}{63594 \cdot 460428} = 4.52\cdot 10^{-5}
 \end{aligned}
 \end{equation}
 
-The naïve solution \todo{reference til koden} is calculating the Jaccard similarity using the characteristic matrix dictionary $D$, by looping through all pairs of actors, and for each pair loop through all the movies. We define $x = |S_1 \cap S_2|$\footnote{i.e the number of movies for which $D$ contains an entry for booth actors}. If we view the set union as $|S_1 \cup S_2| = |S_1 \oplus S_2| + |S_1 \cap S_2|$, we can define $y = |S_1 \oplus S_2|$\footnote{i.e the symmetric difference of the sets, the number of movies for which there are an entry for either one actor or the other in $D$}. The Jaccard similarity can therefore be computed as:
+The naive solution \todo{reference til koden} is calculating the Jaccard similarity using the characteristic matrix dictionary $D$, by looping through all pairs of actors, and for each pair loop through all the movies. We define $x = |S_1 \cap S_2|$\footnote{i.e the number of movies for which $D$ contains an entry for booth actors}. If we view the set union as $|S_1 \cup S_2| = |S_1 \oplus S_2| + |S_1 \cap S_2|$, we can define $y = |S_1 \oplus S_2|$\footnote{i.e the symmetric difference of the sets, the number of movies for which there are an entry for either one actor or the other in $D$}. The Jaccard similarity can therefore be computed as:
 
 \begin{equation}
 J(S_1,S_2) = \frac{x}{x+y}
@@ -182,12 +180,12 @@ J(S_1,S_2) = \frac{x}{x+y}
 Because we have to construct every possible pair of actors and for each pair check if they appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$ is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
 
 \subsubsection{Actual Running Time}
-The actual running time with the naïve implementation takes too long for our normal laptop computer and outruns our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}. This figure is not very exciting in itself, but when we plot it together with the actual running times for the other implementations like MinHashing and Locality Sensitive Hashing, it will show how bad the naive implementation is. \\
+The actual running time with the naive implementation takes too long for our normal laptop computer and outruns our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}. This figure is not very exciting in itself, but when we plot it together with the actual running times for the other implementations like MinHashing and Locality Sensitive Hashing, it will show how bad the naive implementation is. \\
 
 \begin{figure}[!htbp]
     \begin{center}
         \input{plots/naive_at.tex}
-        \caption{Naïve Implementation Actual Times}
+        \caption{Naive Implementation Actual Times}
         \label{fig:naive_at}
     \end{center}
 \end{figure}
@@ -285,7 +283,7 @@ The above described method for calculating similarities are described in detail 
     \end{algorithmic}
 \end{center}
 
-As in the naïve solution, we still have to compare all pairs of actors, but the number values needed to compared for each pair of actors is reduced from $m$ to $k$, resulting in a new running time $O(n^2 \cdot k)$ compared to previous $O(n^2 \cdot m)$, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
+As in the naive solution, we still have to compare all pairs of actors, but the number values needed to compared for each pair of actors is reduced from $m$ to $k$, resulting in a new running time $O(n^2 \cdot k)$ compared to previous $O(n^2 \cdot m)$, see figure ~\ref{fig:char_matrix} versus ~\ref{fig:signature_matrix}.
 
 \subsection{Actual Running Times}
 In figure ~\ref{fig:minhashing_at} the actual running times can be seen with different values for $k$. The running time for the naive solution is also plotted in this graph so one can see the difference in performance. \\
@@ -299,11 +297,38 @@ In figure ~\ref{fig:minhashing_at} the actual running times can be seen with dif
     \end{center}
 \end{figure}
 
-\subsection{Discussion}
-The MinHashing implementation is much faster than the naive, but we sacrifice some correctness. With the number of hash functions $k$, we can tune the correctness up or down, which will also inflict the running time, as seen in figure \ref{fig:minhashing_at}. \\
+\subsection{Correctness}
+The MinHashing implementation is much faster than the naive, but we sacrifice some correctness. With the number of hash functions $k$, we can tune the correctness up or down with $k$ (see figure \ref{tab:minhash-correctness}), which will also inflict the running time, as seen in figure \ref{fig:minhashing_at}. \\
 
-This implementation still takes a long time to run on the \emph{IMDB} dataset, and so further compression/approximation will have to be used. \\
+\begin{figure}[H]
+    \begin{center}
+        \begin{tabular}{c|c|c|c|c}
+              & Actual & $k = 100$ & $k = 10$ & $k = 5$\\
+            \hline
+            1 & 1.0 & 1.0  & 1.0 & 1.0\\
+            2 & 1.0  & 1.0  & 1.0 & 1.0\\
+            3 & 0.667 & 0.78 & 0.9 & 1.0\\
+            4 & 0.667 & 0.75 & 0.9 & 1.0\\
+            5 & 0.667 & 0.74 & 0.9 & 1.0\\
+            6 & 0.667 & 0.71 & 0.9 & 1.0\\
+            7 & 0.667 & 0.7 & 0.9 & 1.0\\
+            8 & 0.667 & 0.7 & 0.9 & 1.0\\
+            9 & 0.667 & 0.69 & 0.8 & 1.0\\
+            10 & 0.667 & 0.68 & 0.8 & 1.0 
+        \end{tabular}
+        \caption{Correctness of MinHashing. \\Dummy data with $n = 1000$ and $m = 100$.}
+        \label{tab:minhash-correctness}
+    \end{center}
+\end{figure}
 
+The variance of the minhashed Jaccard values can be calculated using equation \ref{eq:minhash-var}.
+
+\begin{equation}
+    Var(\hat{J}) = \frac{J(1-J)}{k}
+    \label{eq:minhash-var}
+\end{equation}
+
+Where $\hat{J} = \frac{|S_1 \cap S_2|}{k}$.
 
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then save the vectors into a hashtable (here referred to as a bucket), in such a way that if two vectors are similar, they are put in the bucket. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
@@ -536,14 +561,14 @@ The similarities that LSH outputs is really similarities calculated by the MinHa
 The performance boost in implementing LSH is satisfying. This implementation, we can actually run on the \emph{IMDB} dataset within minutes on a normal laptop. \\
 
 
-\section{B-bit}
-B-bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
+\section{b-Bit}
+B-Bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-Bit value. \\
 
-In our project we have found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This means we can not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. This is proposed in \cite{article:bbit} section 5.1. Though we have not been able to implement this, and therefore our b-bit is nonfunctional. \\
+In our project we have found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This means we can not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. This is proposed in \cite{article:bbit} section 5.1. Though we have not been able to implement this, and therefore our b-Bit is nonfunctional. \\
 
 If we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
 
-Say we had some hardware that could do boolean comparisons faster than integer comparisons, then a b-bit implementation could utilize this functionality. But that is out of scope of this course. \\
+Say we had some hardware that could do boolean comparisons faster than integer comparisons, then a b-Bit implementation could utilize this functionality. But that is out of scope of this course. \\
 
 
 \subsection{The Variance-Space tradeoff}
@@ -573,7 +598,7 @@ In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{
 \begin{figure}[H]
     \begin{center}
         \includegraphics{plots/bbit/bbit.eps}
-        \caption{B-bit storage improvement}
+        \caption{b-Bit storage improvement}
         \label{fig:bbit}
     \end{center}
 \end{figure}
@@ -581,25 +606,26 @@ In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{
 If a set has the same $k$ and is saved in 1 bit it will have an increased variance compared to being saved in 64 bit. To counteract this we can increase $k$. Jeg bliver lige nødt til at få det her ud på dansk. Det er klart at hvis man gemmer i 1 bit istedet for 64 bit mister man noget præcision. Ved at lave nogle flere permutations kan man opnå samme præsision. Hvor meget skal k stige for at opnå samme præcision? Ikke ret meget har jeg læst mig til. Man sparer simpelthen så meget plads at man kan øge præcisionen og stadig spare plads. Det er en winwin situation!
 
 \subsection{Running Time}
-Our implementation of the b-bit algorithm does not succesfully run on the imdb dataset, only on our dummy data. Part of the reasom for this is that we have not been able to implement a data type with a small enough overhead. So instead of our data actually taking up less space, it takes up the same space, and furthermore additional processing is done to it. See figure \ref{fig:bbit_at} for the actual running times.\\
+Our implementation of the b-Bit algorithm does not succesfully run on the imdb dataset, only on our dummy data. Part of the reasom for this is that we have not been able to implement a data type with a small enough overhead. So instead of our data actually taking up less space, it takes up the same space, and furthermore additional processing is done to it. \\
 
-\begin{figure}[H]
-    \begin{center}
-        %\input{plots/bbit_at.tex}
-        \caption{B-bit actual running time}
-        \label{fig:bbit_at}
-    \end{center}
-\end{figure}
+%\begin{figure}[H]
+    %\begin{center}
+        %%\input{plots/bbit_at.tex}
+        %\caption{b-Bit actual running time}
+        %\label{fig:bbit_at}
+    %\end{center}
+%\end{figure}
 
 \subsection{LSH versus b-Bit}
-These two algorithms are both extensions to MinHashing. In the worst case b-Bit has a 21-fold improvement in space complexity in comparison to how the data is saved in LSH. As long as the $k$ value is large enough, b-Bit will have about the same correctness as LSH. \todo{k-value - er det rigtigt nok}
+These two algorithms are both extensions to MinHashing. In the worst case b-Bit has a 21-fold improvement in space complexity in comparison to how the data is saved in LSH. As long as the $k$ value is large enough, b-Bit will have about the same correctness as LSH.
 
 \section{Future Work}
-Odd Sketch is good when you want to improve precision when the Jaccard similarity index is close to 1. It can provide a short list and ranking over the most similar items. \\
+By implementing Odd Sketch, the Jaccard similirity can be estimated by \emph{flipping bits} instead of setting bits. This has an even more space efficient approach, and could improve the solution to this project. \\
 
+To go in another direction, one could utilize an implementation of \emph{MapReduce}. This way, instead of approximating the solution with LSH or b-Bit, the algorithm will make use of parallelization. \\
 
 \section{Conclusion}
-By using MinHashing and Locality Sensitive Hashing, we got a pretty good approximation of similar pairs in the \emph{IMDB} dataset within a time span that was acceptable. It seems like b-bit could have made it faster, or at least more space efficient, but a succesful implementation was not reachable before the project handin. \\
+By using MinHashing and Locality Sensitive Hashing, we got a pretty good approximation of similar pairs in the \emph{IMDB} dataset within a time span that was acceptable. Theoretically, it seems like b-Bit could have improved on the solution, regarding both time, but especially space complexity, but a succesful implementation was not reachable before the project handin because of difficulties with the programming language. \\
 
 The correctness of the MinHashing and LSH implementations were acceptable. \\
 
