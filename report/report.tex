@@ -306,7 +306,7 @@ This implementation still takes a long time to run on the \emph{IMDB} dataset, a
 
 
 \section{Locality Sensitive Hashing (LSH)}
-Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then save the vectors into a hashtable (here referred to as a bucket), in such a way that if two vectors are similar, they are put in the bucket. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take each signature produced by min hashing and chop them up into shorter vectors $S_j = {v_0, v_1, \ldots v_{b-1}}$, by dividing the total number of rows into $b$ bands of $r$ rows. We then put the ids of the signature into a list of hash tables, one for each band. This is done in such a way that if two vectors are similar for a given band, they id of their signature is put into a bucket. If a bucket has two or more vectors in it, then the signatures with these ids become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
 
 In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into two bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. If a signature is in one or more buckets it is a candidate signature to be checked for similarity, whereas if a signature is only in red buckets, which have only one or zero signatures, it is discarded as a candidate signature. \\
 
@@ -417,7 +417,9 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
     \end{center}
 \end{figure}
 
-We concatenate the integers of the r rows in to a single string and then uses this as a key for a dictionary, which is essential a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the  hash table we add the signature id to the existing bucket. The following pseudo code in algorithm \ref{alg:lsh} describes this. 
+In our algorithm, we concatenate the integers of the r rows into a single string and then uses this as a key for a dictionary, which is essentially a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the hash table we add the signature id to the existing bucket. The following pseudo code in algorithm \ref{alg:lsh}describes this.
+
+
 
 \begin{center}   
     \captionof{algorithm}{Locality Sensitive Hashing algorithm}\label{alg:lsh}
@@ -463,7 +465,7 @@ We concatenate the integers of the r rows in to a single string and then uses th
 \end{center}
 
 \subsection{Analysis}
-In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix\todo{incorrect}, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
+The hashing to buckets is $\Theta(n\cdot m)$, whereas the the creation of candidate pairs is $O(n^2 \cdot b)$, since, if for all bands, the vectors hash to the same bucket we would get all possible pairs of signature ids for each band, which in turn would mean we would have to permute and check for existence in the $candidate_pairs$ set\footnote{This step could possibly be included in the hashing of buckets}. The actual calculation of similarities time complexity would then be the same as minhashing similarity calculation $O(n^2 \cdot k)$ and since $k>b$ this will dominate the running time. This is the case where all documents are exactly similar, hopefully this is not the case and we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
 By tuning $r$ and $b$, we can state how similar we will allow pairs to be. In the figure \ref{fig:scurve} is plotted three curves of the formula \ref{eq:s} with different $r$, and $b$ values. These are plots of the probability that two signatures will become candidate pairs. At the point on the curves where the value on the y-axis is 0.5, is the \emph{threshold} point\footnote{This is about the point where the curve is the steepest}. When we have a pair with a similarity equivalent to this point, we know that there is a $50\%$ probability that is will become a candidate pair. \\
 
