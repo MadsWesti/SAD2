@@ -415,7 +415,7 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
     \end{center}
 \end{figure}
 
-We concatenate the integers of the r rows in to a single string and then uses this as a key for a dictionary, which is essential a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the  hash table we add the signature id to the existing bucket. The follow pseudo code in algorithm \ref{alg:lsh} describes this. 
+We concatenate the integers of the r rows in to a single string and then uses this as a key for a dictionary, which is essential a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the  hash table we add the signature id to the existing bucket. The following pseudo code in algorithm \ref{alg:lsh} describes this. 
 
 \begin{center}   
     \captionof{algorithm}{Locality Sensitive Hashing algorithm}\label{alg:lsh}
