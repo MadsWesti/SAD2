@@ -119,7 +119,6 @@ An actor has starred in a series of movies. This set\footnote{To compare sets of
 
 
 \subsection{Measuring Running Time}
-\todo{And are we doing this at all?}
 
 For every new implementation, we will measure the actual running time. It will be measured on a normal laptop computer with 8GB RAM and and intel i5 quadcore. If the running time takes longer than our patience permits, we will just put in how long we waited, and note that we did not run it through.\\
 
@@ -479,7 +478,7 @@ If we bring this curve further to the right - using our tuning parameters $r$, a
 \begin{figure}[H]
     \begin{center}
         \input{plots/scurve.tex}
-        \caption{S-curve - $f(s) = 1 - (1 - s^r)^b$}
+        \caption{S-curve - $f(s) = 1 - (1 - s^r)^b$ ; $k = 1000$}
         \label{fig:scurve}
     \end{center}
 \end{figure}
@@ -488,7 +487,7 @@ The three S-curves in figure \ref{fig:scurve} have the following threshold value
 
 For every band, a pair has about $1 - (\left(1-s^r \right)$ chance of being regarded as similar, which is not necessarily much. But there are $b$ bands in which this is applicable, which raises the chance of the pair becoming a candidate pair. \\
 
-There is always a probability of a similar pair not becoming a candidate pair and vice versa. These are false negatives and false positives. False positives will be chosen as candidate pairs without being similar, and false negatives will not be chosen as candidates even though they are similar. The S-curve can be tuned to match a high probability for either false positives or false negatives, depending on what is important to the problem. \todo{Hvad er vigtigst i dette project?}\\
+There is always a probability of a similar pair not becoming a candidate pair and vice versa. These are false negatives and false positives. False positives will be chosen as candidate pairs without being similar, and false negatives will not be chosen as candidates even though they are similar. The S-curve can be tuned to match a high probability for either false positives or false negatives, depending on what is important to the problem. \\
 
 
 \begin{equation}
@@ -509,33 +508,32 @@ The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together 
 \end{figure}
 
 \subsection{Correctness}
-In the following table \ref{tab:lsh-correctness} the top 10 similar pairs from the LSH implementation can be seen together with their actual Jaccard similarities. This was run on dummy data. The worst difference is pair number 8, with a difference of $0.7 - 0.5 = 0.2$.\\
+In the following table \ref{tab:lsh-correctness} the top 10 similar pairs from the LSH implementation can be seen together with their actual Jaccard similarities. This was run on dummy data with $k = 1000$, and $b = 100$. This gives us a threshold of $t = (1/b)^{1/r} = 0.63$, which indicates that if a pair has similarity 0.63, there is 50\% chance for it to get selected.  \\
 
-Both the actual pairs with similarity $1.0$ has been found. There were only 18 pairs with an actual similarity of $0.667$. There were over 100 pairs with similarity $0.5$. The similarities that LSH outputs is really similarities calculated by the MinHashing algorithm, including false positives and excluding false negatives from the LSH implementation. \\
+The similarities that LSH outputs is really similarities calculated by the MinHashing algorithm, including false positives and excluding false negatives from the LSH implementation. \\
 
-\begin{figure}
+\begin{figure}[H]
     \begin{center}
         \begin{tabular}{c|c|c}
               & Actual & LSH \\
             \hline
             1 & 1.0 & 1.0 \\
             2 & 1.0  & 1.0 \\
-            3 & 0.667 & 0.82 \\
-            4 & 0.667 & 0.8 \\
-            5 & 0.667 & 0.78 \\
-            6 & 0.667 & 0.74 \\
-            7 & 0.667 & 0.72 \\
-            8 & 0.5 & 0.7 \\
-            9 & 0.667 & 0.7 \\
-            10 & 0.667 & 0.7 
+            3 & 0.667 & 0.702 \\
+            4 & 0.667 & 0.695 \\
+            5 & 0.667 & 0.689 \\
+            6 & 0.667 & 0.684 \\
+            7 & 0.667 & 0.681 \\
+            8 & 0.667 & 0.681 \\
+            9 & 0.667 & 0.677 \\
+            10 & 0.667 & 0.673 
         \end{tabular}
         \caption{Correctness of LSH}
         \label{tab:lsh-correctness}
     \end{center}
 \end{figure}
 
-\subsection{Discussion}
-The performance boost in implementing LSH is satisfying. This implementation, we can actually run on the \emph{IMDB} dataset within minutes on a normal laptop.
+The performance boost in implementing LSH is satisfying. This implementation, we can actually run on the \emph{IMDB} dataset within minutes on a normal laptop. \\
 
 
 \section{B-bit}
