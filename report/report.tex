@@ -69,7 +69,7 @@
 \setlength{\parindent}{0cm}
 \setlength{\unitlength}{1mm}
 \date{December 17th 2014\\ IT University of Copenhagen}
-\title{Roles In Movies\\SAD2 Fall 2014}
+\title{Actors In Movies\\SAD2 Fall 2014}
 
 \author{Sarah de Voss\\
 \texttt{satv@itu.dk}
@@ -88,7 +88,7 @@
 \setcounter{page}{1}
 \section{Finding a Similar Actor}
 
-Say you want to make a movie with a specific actor as the lead role, but the actor is unavailable. You have already written the script, and found all the other actors. The only thing missing is the lead actor. \\
+Say you want to make a movie with a specific actor in the leading role, but the actor is unavailable. You have already written the script, and found all the other actors. The only thing missing is the lead actor. \\
 
 You find a similar actor. You find the most similar actor. And for this we must assume that, what defines an actor, is what movies it appears in. So you find the actor that has the most movies in common with your intended actor, and use that actor instead. \\
 
@@ -104,13 +104,13 @@ We would like to find a similar actor to replace our unavailable lead actor. Whe
 
 We are using Python to implement our algorithms as this is our language of choice. \\
 
-We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit} and \emph{odd sketch}, which is the extension to our report.\\
+We will look at the naïve solution, then \emph{MinHashing}, and then \emph{Locality Sensitive Hashing}, this is part one of the report. After that we will implement \emph{b-bit}, which is the extension to our report.\\
 
-For each algorithm we will explain how it works and its different applications and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section by discussing the results we achieved.\\
+For each algorithm we will explain how it works and then go on to explain how we implemented it. We then explain the time and space complexity and the tradeoffs in accuracy. We finish each section with a discussion.\\
 
 
 \subsection{Measuring similarity}
-An actor has starred in a series of movies. This set of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint.
+An actor has starred in a series of movies. This set\footnote{To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles} of movies we will call $S_1$. Another actor has starred in another set of movies $S_2$. We can measure the similarity between these actors using the Jaccard similarity index. It takes the intersection of the 2 sets and divides it by the union of the 2 sets. The Jaccard index falls in the range of 0-1. It is 1 if the sets are identical, and it is 0 if the sets are disjoint.
 
 \begin{equation}
 \text{Jaccard similarity index} (S_1, S_2) = \frac{|S_1 \cap S_2|}{|S_1 \cup S_2|}
@@ -125,7 +125,7 @@ For every new implementation, we will measure the actual running time. It will b
 
 We will also create some random dummy data to run. This way we will be able to graph the running times, and look at the tendency curves. In the dummy data, there are 10 times as many actors, as there are movies. This corresponds pretty well with the \emph{imdb-r.txt} file, which has 63,594 distinct movies, and 460,428 distinct actors (not counting the movies with nonexisting movie-ids, and also not counting the movies with a ranking of \emph{NULL}).\\
 
-But even though there are 10 more actors per movies many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that a role appears in, it is about 3. This will be taken into account when creating the dummy data. \\
+But even though there are 10 more actors per movies many of these actors are only in one movie, and only few actors are in many movies. If we calculate the average number of movies, that an actor appears in, it is about 3. This will be taken into account when creating the dummy data. \\
 
 One could argue that we could use a minimum rank as a cutoff on the original dataset, to simulate dummy data. But when we generate it randomly ourselves, we have (almost) full control over how many objects are created. \\
 
@@ -140,7 +140,7 @@ An actor is represented as a set of movies\footnote{Corresponding to the ids of 
 a_1 = \{m_1, m_2, m_3, \ldots , m_i\}
 \end{equation}
 
-Instead of storing the actors as sets, for reasons that become more apparent in section \ref{sec:minhashing}, it is beneficial to view the data as a binary characteristic matrix, where the rows are movies, the columns are actors and the values of the matrix defines whether an actor had a role in a given movie or not.\\ 
+Instead of storing the actors as sets, for reasons that become more apparent in section \ref{sec:minhashing}, it is beneficial to view the data as a binary characteristic matrix, where the rows are movies, the columns are actors and the values of the matrix defines whether an actor starred in a given movie or not.\\ 
 
 \begin{figure}[!htbp]
 \begin{eqnarray*}
@@ -193,6 +193,7 @@ The actual running time with the naïve implementation takes too long for our no
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
 
 \section{MinHashing}\label{sec:minhashing}
 MinHashing is a way of compressing the information stored in the characteristic matrix into space efficient signatures without loosing too much accuracy. MinHashing reduces the number of rows in the characteristic matrix. The number of columns stays the same.\\
@@ -200,7 +201,7 @@ MinHashing is a way of compressing the information stored in the characteristic 
 Signatures are produced by first permuting the rows in the characteristic matrix. After the rows have been permuted we proceed by looking at the first column where we search until we find the first 1 where we read the index number. We do this for all columns. The signature is then the list of index numbers. This signature matrix is one row. To gain more accuracy we can permute the rows $k$ times and repeat the search for 1s. $k$ is the number of rows in the signiture matrix.
 
 \subsection{Permutations and the simulating of these}
-Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. To compare sets of documents, the normal procedure is to convert them into shingles. But since the "documents" we are working on, are actual sets of index numbers, there is no need for us to use shingles\todo{Slightly irrelevant}. \\
+Since the permutation of such a large matrix is infeasible, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. \\
 
 Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
 
@@ -241,7 +242,7 @@ We simulate $k$ random permutations by creating $k$ number of random hash functi
     \label{fig:signature_matrix}
 \end{figure}
 
-The above described method for calculating similarities are described in detail in our pseudo python code in algorithm \ref{alg:minhashing}. This forms the basis for our implementation.
+The above described method for calculating similarities are described in detail in our pseudo code in algorithm \ref{alg:minhashing}. This forms the basis for our implementation.
 
 \begin{center}   
     \captionof{algorithm}[hypcap=false]{MinHashing algorithm}\label{alg:minhashing}
@@ -300,6 +301,7 @@ In figure ~\ref{fig:minhashing_at} the actual running times can be seen with dif
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
 
 \section{Locality Sensitive Hashing (LSH)}
 Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then save the vectors into a hashtable (here referred to as a bucket), in such a way that if two vectors are similar, they are put in the bucket. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
@@ -460,6 +462,8 @@ The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together 
     \end{center}
 \end{figure}
 
+\subsection{Discussion}
+
 \section{B-bit}
 B-bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
@@ -517,11 +521,14 @@ Our implementation of the b-bit algorithm does not succesfully run on the imdb d
 \subsection{LSH versus b-Bit}
 These two algorithms are both modifications to MinHashing. How do they compare to each other? Performance. What are their strengths?
 
-\section{Future Work}
+\subsection{Discussion}
 
+\section{Future Work}
 Odd Sketch is good when you want to improve precision when the Jaccard similarity index is close to 1. It can provide a short list and ranking over the most similar items. \\
 
 
+
+\subsection{Discussion}
 
 \section{Conclusion}
 \newpage
