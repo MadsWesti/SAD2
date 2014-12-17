@@ -331,7 +331,7 @@ The variance of the minhashed Jaccard values can be calculated using equation \r
 Where $\hat{J} = \frac{|S_1 \cap S_2|}{k}$.
 
 \section{Locality Sensitive Hashing (LSH)}
-Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take the signatures produced by min hashing and chop them up into shorter vectors by dividing the total number of rows into $b$ bands of $r$ rows. We then save the vectors into a hashtable (here referred to as a bucket), in such a way that if two vectors are similar, they are put in the bucket. If a bucket has two or more vectors in it, then the signatures containing these vectors become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
+Locality sensitive hashing is a way of coping with an even larger amount of data than MinHashing can. So if the number of pairs is too large, LSH is an option to use. We take each signature produced by min hashing and chop them up into shorter vectors $S_j = {v_0, v_1, \ldots v_{b-1}}$, by dividing the total number of rows into $b$ bands of $r$ rows. We then put the ids of the signature into a list of hash tables, one for each band. This is done in such a way that if two vectors are similar for a given band, they id of their signature is put into a bucket. If a bucket has two or more vectors in it, then the signatures with these ids become candidate pairs. When comparing for similarity, we then only compare candidate pairs. This leaves us with a significant fraction of the original set of pairs to check. \\
 
 In figure \ref{fig:lsh_buckets} the signature matrix from earlier has been dissected into two bands. These bands have, in this example, the same number of buckets as there are signatures. The buckets containing 2 or more signatures have been marked in green. If a signature is in one or more buckets it is a candidate signature to be checked for similarity, whereas if a signature is only in red buckets, which have only one or zero signatures, it is discarded as a candidate signature. \\
 
@@ -442,7 +442,9 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
     \end{center}
 \end{figure}
 
-We concatenate the integers of the r rows in to a single string and then uses this as a key for a dictionary, which is essential a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the  hash table we add the signature id to the existing bucket. The following pseudo code in algorithm \ref{alg:lsh} describes this. 
+In our algorithm, we concatenate the integers of the r rows into a single string and then uses this as a key for a dictionary, which is essentially a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the hash table we add the signature id to the existing bucket. The following pseudo code in algorithm \ref{alg:lsh}describes this.
+
+
 
 \begin{center}   
     \captionof{algorithm}{Locality Sensitive Hashing algorithm}\label{alg:lsh}
@@ -488,7 +490,7 @@ We concatenate the integers of the r rows in to a single string and then uses th
 \end{center}
 
 \subsection{Analysis}
-In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix\todo{incorrect}, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
+The hashing to buckets is $\Theta(n\cdot m)$, whereas the the creation of candidate pairs is $O(n^2 \cdot b)$, since, if for all bands, the vectors hash to the same bucket we would get all possible pairs of signature ids for each band, which in turn would mean we would have to permute and check for existence in the $candidate_pairs$ set\footnote{This step could possibly be included in the hashing of buckets}. The actual calculation of similarities time complexity would then be the same as minhashing similarity calculation $O(n^2 \cdot k)$ and since $k>b$ this will dominate the running time. This is the case where all documents are exactly similar, hopefully this is not the case and we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
 By tuning $r$ and $b$, we can state how similar we will allow pairs to be. In the figure \ref{fig:scurve} is plotted three curves of the formula \ref{eq:s} with different $r$, and $b$ values. These are plots of the probability that two signatures will become candidate pairs. At the point on the curves where the value on the y-axis is 0.5, is the \emph{threshold} point\footnote{This is about the point where the curve is the steepest}. When we have a pair with a similarity equivalent to this point, we know that there is a $50\%$ probability that is will become a candidate pair. \\
 
@@ -533,7 +535,7 @@ The actual running times of LSH can be seen in figure \ref{fig:lsh_at} together 
 \end{figure}
 
 \subsection{Correctness}
-In the following table \ref{tab:lsh-correctness} the top 10 similar pairs from the LSH implementation can be seen together with their actual Jaccard similarities. This was run on dummy data with $k = 1000$, and $b = 100$. This gives us a threshold of $t = (1/b)^{1/r} = 0.63$, which indicates that if a pair has similarity 0.63, there is 50\% chance for it to get selected.  \\
+In the following table \ref{tab:lsh-correctness} the top 10 similar pairs from the LSH implementation can be seen together with their actual Jaccard similarities. This was run on dummy data with $k = 1000$, and $b = 100$. This gives us a threshold of $t = (1/b)^{1/r} = 0.63$, which indicates that if a pair has similarity 0.63, there is 50\% chance of getting selected.  \\
 
 The similarities that LSH outputs is really similarities calculated by the MinHashing algorithm, including false positives and excluding false negatives from the LSH implementation. \\
 
@@ -563,8 +565,6 @@ The performance boost in implementing LSH is satisfying. This implementation, we
 
 \section{b-Bit}
 B-Bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-Bit value. \\
-
-In our project we have found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This means we can not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. This is proposed in \cite{article:bbit} section 5.1. Though we have not been able to implement this, and therefore our b-Bit is nonfunctional. \\
 
 If we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
 
@@ -603,26 +603,18 @@ In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{
     \end{center}
 \end{figure}
 
-If a set has the same $k$ and is saved in 1 bit it will have an increased variance compared to being saved in 64 bit. To counteract this we can increase $k$. Jeg bliver lige nødt til at få det her ud på dansk. Det er klart at hvis man gemmer i 1 bit istedet for 64 bit mister man noget præcision. Ved at lave nogle flere permutations kan man opnå samme præsision. Hvor meget skal k stige for at opnå samme præcision? Ikke ret meget har jeg læst mig til. Man sparer simpelthen så meget plads at man kan øge præcisionen og stadig spare plads. Det er en winwin situation!
+If a set has the same $k$ and is saved in 1 bit it will have an increased variance compared to being saved in 64 bit. To counteract this we can increase $k$. $k$ does not have to increase much to achieve the same variance\cite{article:bbit2}. The space saved is so great that we can increase the variance and save space at the same time.
+
 
 \subsection{Running Time}
-Our implementation of the b-Bit algorithm does not succesfully run on the imdb dataset, only on our dummy data. Part of the reasom for this is that we have not been able to implement a data type with a small enough overhead. So instead of our data actually taking up less space, it takes up the same space, and furthermore additional processing is done to it. \\
+In our project we have found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This means we can not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. This is proposed in \cite{article:bbit} section 5.1. Though we have not been able to implement this, and therefore our b-bit is nonfunctional. \\
 
-%\begin{figure}[H]
-    %\begin{center}
-        %%\input{plots/bbit_at.tex}
-        %\caption{b-Bit actual running time}
-        %\label{fig:bbit_at}
-    %\end{center}
-%\end{figure}
-
-\subsection{LSH versus b-Bit}
-These two algorithms are both extensions to MinHashing. In the worst case b-Bit has a 21-fold improvement in space complexity in comparison to how the data is saved in LSH. As long as the $k$ value is large enough, b-Bit will have about the same correctness as LSH.
 
 \section{Future Work}
 By implementing Odd Sketch, the Jaccard similirity can be estimated by \emph{flipping bits} instead of setting bits. This has an even more space efficient approach, and could improve the solution to this project. \\
 
 To go in another direction, one could utilize an implementation of \emph{MapReduce}. This way, instead of approximating the solution with LSH or b-Bit, the algorithm will make use of parallelization. \\
+
 
 \section{Conclusion}
 By using MinHashing and Locality Sensitive Hashing, we got a pretty good approximation of similar pairs in the \emph{IMDB} dataset within a time span that was acceptable. Theoretically, it seems like b-Bit could have improved on the solution, regarding both time, but especially space complexity, but a succesful implementation was not reachable before the project handin because of difficulties with the programming language. \\
