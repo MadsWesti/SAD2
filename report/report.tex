@@ -415,6 +415,51 @@ So the candidate signatures are $S_0, S_1, S_3, S_4, S_6$, and the discarded sig
     \end{center}
 \end{figure}
 
+We concatenate the integers of the r rows in to a single string and then uses this as a key for a dictionary, which is essential a hash table. This gives us our desired result of identical bands of signatures hashes to the same value with high probability. We create a hash table for each band, and then for each key, we create a list\footnote{a bucket} and add the signature id to it. Every time we find key that already present in the  hash table we add the signature id to the existing bucket. The follow pseudo code in algorithm \ref{alg:lsh} describes this. 
+
+\begin{center}   
+    \captionof{algorithm}{Locallity Similarity Hashing algorithm}\label{alg:lsh}
+    \begin{algorithmic}
+    
+    \BState \textbf{Calculate signature matrix as in algorithm \ref{alg:minhashing}}\\
+
+    \State $SIG\gets \text{signature matrix}$
+    \State $S\gets \text{number of signatures}$
+    \State $bucket\_list\gets \text{empty list}$
+    \State $B\gets \text{number of bands}$\\
+
+    \BState \emph{Fill the buckets}
+    \For{$b_i$ in $i = 0 \ldots B-1$}
+        \State $h_i \gets \text{empty dictionary}$
+        \State $bucket\_list.append(h_i)$
+        \For{$SIG_j[b_i]$ in $j = 0 \ldots S-1$}
+            \State $key \gets SIG_j[b_i]$
+            \If{$key$ in $h_i$}
+                \State $bucket \gets h_i[key]$
+            \Else
+                \State $bucket \gets \text{empty list}$
+            \EndIf
+            \State $bucket.append(j)$
+        \EndFor
+    \EndFor\\
+
+    \State $candidate\_pairs \gets \text{empty set}$
+    \ForAll{$h_i$ in $bucket\_list$}
+        \ForAll{$key$ in $h_i$}
+            \State $bucket \gets h_i[key]$
+            \If{$bucket.length > 1$}
+                \For{$pair$ in $bucket$}
+                    \State $candidate\_pairs.add(pair)$ 
+                \EndFor
+            \EndIf
+        \EndFor        
+    \EndFor\\
+
+    \BState \textbf{Calculate similarities from signature matrix as in algorithm \ref{alg:minhashing}, for the candidate pairs.}
+
+    \end{algorithmic}
+\end{center}
+
 \subsection{Analysis}
 In the worst case example, we would get all pairs to be candidate pairs, and the time complexity would be $O(n^2)$ in LSH. But to get to LSH, we would have to do MinHashing first, to get the signature matrix\todo{incorrect}, and MinHashing has a time complexity of $O(n^2k)$. Hopefully, we can discard many signatures, so we only have a fraction as candidate pairs. By looking at the tuning parameters $b$ and $r$, we can calculate the probability $s$ that two signatures will become a candidate pair. \\
 
