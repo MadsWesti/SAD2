@@ -541,8 +541,6 @@ The performance boost in implementing LSH is satisfying. This implementation, we
 \section{B-bit}
 B-bit MinHashing is a way to estimate set similarity in a more storage efficient way than with MinHashing alone. It is a modification for MinHashing. The time complexity remains $O(n^2k)$, but out of every signature, only the last few bits are saved. This simulates a low level hashing function, where dissimilar documents could be hashed to the same b-bit value. \\
 
-In our project we have found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This means we can not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. This is proposed in \cite{article:bbit} section 5.1. Though we have not been able to implement this, and therefore our b-bit is nonfunctional. \\
-
 If we are able to store one object using only 1 bit, we only use as many bits, as we have objects. If we have $n$ objects, and they all originally have a minimum size of $s = 8 \cdot 8 = 64$ bits, we would at most use $1/s = 1/64$ of the original space. Notice that the time complexity is still the same. \\
 
 Say we had some hardware that could do boolean comparisons faster than integer comparisons, then a b-bit implementation could utilize this functionality. But that is out of scope of this course. \\
@@ -580,7 +578,8 @@ In the best case, $R = r_1 = r_2 = 1$, and the improvement ratio will be $\frac{
     \end{center}
 \end{figure}
 
-If a set has the same $k$ and is saved in 1 bit it will have an increased variance compared to being saved in 64 bit. To counteract this we can increase $k$. Jeg bliver lige nødt til at få det her ud på dansk. Det er klart at hvis man gemmer i 1 bit istedet for 64 bit mister man noget præcision. Ved at lave nogle flere permutations kan man opnå samme præsision. Hvor meget skal k stige for at opnå samme præcision? Ikke ret meget har jeg læst mig til. Man sparer simpelthen så meget plads at man kan øge præcisionen og stadig spare plads. Det er en winwin situation!
+If a set has the same $k$ and is saved in 1 bit it will have an increased variance compared to being saved in 64 bit. To counteract this we can increase $k$. $k$ does not have to increase much to achieve the same variance.\todo{en referance til en side på nettet} The space saved is so great that we can increase the variance and save space at the same time.
+
 
 \subsection{Running Time}
 Our implementation of the b-bit algorithm does not succesfully run on the imdb dataset, only on our dummy data. Part of the reasom for this is that we have not been able to implement a data type with a small enough overhead. So instead of our data actually taking up less space, it takes up the same space, and furthermore additional processing is done to it. See figure \ref{fig:bbit_at} for the actual running times.\\
@@ -596,8 +595,12 @@ Our implementation of the b-bit algorithm does not succesfully run on the imdb d
 \subsection{LSH versus b-Bit}
 These two algorithms are both extensions to MinHashing. In the worst case b-Bit has a 21-fold improvement in space complexity in comparison to how the data is saved in LSH. As long as the $k$ value is large enough, b-Bit will have about the same correctness as LSH. \todo{k-value - er det rigtigt nok}
 
+\subsection{Discussion}
+In our project we have found difficulties getting \emph{Python} to store a bit value using less space than an integer below $2^{30}-1 = 1,073,741,823$, or just about 1 billion\footnote{All our objects (integers) would in Python have a size of 8 bytes, not counting the overhead.}. This means we can not gain much in space complexity using python, since our dataset is only in the scale of millions of distinct object. We will have to cluster the binary values from every signature together in a single integer, and do bitwise operations on that. This is proposed in \cite{article:bbit} section 5.1. Though we have not been able to implement this, and therefore our b-bit is nonfunctional. \\
+
 \section{Future Work}
-Odd Sketch is good when you want to improve precision when the Jaccard similarity index is close to 1. It can provide a short list and ranking over the most similar items. \\
+Odd Sketch is good when you want to improve precision when the Jaccard similarity index is close to 1. It can provide a short list and ranking over the most similar items. Looking at b-Bit versus Odd Sketch.\\
+
 
 
 \section{Conclusion}
