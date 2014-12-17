@@ -171,13 +171,13 @@ ratio &= \frac{1323388}{63594 \cdot 460428} = 4.52\cdot 10^{-5}
 \end{aligned}
 \end{equation}
 
-The naive solution \todo{reference til koden} is calculating the Jaccard similarity using the characteristic matrix dictionary $D$, by looping through all pairs of actors, and for each pair loop through all the movies. We define $x = |S_1 \cap S_2|$\footnote{i.e the number of movies for which $D$ contains an entry for booth actors}. If we view the set union as $|S_1 \cup S_2| = |S_1 \oplus S_2| + |S_1 \cap S_2|$, we can define $y = |S_1 \oplus S_2|$\footnote{i.e the symmetric difference of the sets, the number of movies for which there are an entry for either one actor or the other in $D$}. The Jaccard similarity can therefore be computed as:
+The naive solution is calculating the Jaccard similarity using the characteristic matrix dictionary $D$, by looping through all pairs of actors, and for each pair loop through all the movies. We define $x = |S_1 \cap S_2|$\footnote{i.e the number of movies for which $D$ contains an entry for booth actors}. If we view the set union as $|S_1 \cup S_2| = |S_1 \oplus S_2| + |S_1 \cap S_2|$, we can define $y = |S_1 \oplus S_2|$\footnote{i.e the symmetric difference of the sets, the number of movies for which there are an entry for either one actor or the other in $D$}. The Jaccard similarity can therefore be computed as:
 
 \begin{equation}
 J(S_1,S_2) = \frac{x}{x+y}
 \end{equation}
 
-Because we have to construct every possible pair of actors and for each pair check if they appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$\todo{a?} is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
+Because we have to construct every possible pair of actors and for each pair check if they appear in all movies, resulting in three nested for loops, the time complexity is $O(n^2 \cdot m)$, where $n$ is the number of distinct actors, and $m$ is the number of movies. Since this will not fit in memory on an average computer, a more sophisticated solution is needed. \\
 
 \subsubsection{Actual Running Time}
 The actual running time with the naive implementation takes too long for our normal laptop computer and outruns our patience. We ran the implementation on random dummy datasets, which can be seen in figure ~\ref{fig:naive_at}. This figure is not very exciting in itself, but when we plot it together with the actual running times for the other implementations like MinHashing and Locality Sensitive Hashing, it will show how poorly the naive implementation performs. \\
@@ -197,7 +197,7 @@ MinHashing is a way of compressing the information stored in the characteristic 
 Signatures are produced by first permuting the rows in the characteristic matrix. After the rows have been permuted we proceed by looking at the first column where we search until we find the first 1 where we read the index number. We do this for all columns. The signature is then the list of index numbers where we found the first 1. This has created one row for the signature matrix. To gain more accuracy we can permute the rows in the characteristic matrix $k$ times and repeat the search for 1s. The number of rows in the signature matrix will be $k$.
 
 \subsection{Permutations and the Simulating of These}
-Since the permutation of such a large matrix\todo{what matrix?} is infeasible on a computer, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. These will simulate permutations of the whole matrix.\\
+Since the permutation of such a large matrix as the characteristic matrix is infeasible on a computer, we create a number of hash functions, $h_1, ..., h_k$, which should be less than the number of rows in the characteristic matrix. These will simulate permutations of the whole matrix.\\
 
 Remarkably, the probability that the minhash function produces the same value for two sets is the same as the Jaccard similarity of the two sets (p. 82 in \cite{book:mmds}). Let \\
 
