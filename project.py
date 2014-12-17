@@ -1,29 +1,100 @@
 import re, math
 import random
 import time
-
+import sys
+from collections import OrderedDict
+import operator
 
 # CONFIGURATION
-#filename = "imdb-r.txt"
-filename = "dummy.txt"
-min_rank = 0.0
+file_actors = "data/actors.txt"
+file_roles = "data/roles.txt"
+file_movies = "data/movies.txt"
+number_of_movies_threshold = 100
+min_rank = 2.0
 
 ## Naive
 naive = False
 
 ## MinHashing
 minhash = False
-k = 3 # hash functions
+k = 300 # hash functions
 
 ## LSH
-lsh = False
-b = 20 # bands
-bu = 4 # buckets
+lsh = True
+b = 60 # bands
 ### Remember to set the k value in MinHashing
 
-#bbit
-bbit = True
-b = 1
+bbit = False
+num_of_bits = 3
+
+def parse_data_actors():
+    movies_dict = OrderedDict()
+    actors_dict = {}
+    movies = {}
+    actors = {}
+    characteristic_matrix = {}
+
+    #parse actors
+    with open(file_actors) as f:
+        for line in f:
+            actor = re.split(',', line)
+            a_id = int(actor[0])
+            first_name = actor[1][1:-1]
+            last_name = actor[2][1:-1]
+            number_of_movies = int(actor[4])
+            if number_of_movies > number_of_movies_threshold:
+                actors_dict[a_id] = first_name+" "+last_name
+
+    #parse movies
+    with open(file_movies) as f:
+        for line in f:
+            movie = re.split(',', line)
+            m_id = int(movie[0].strip())
+            name = movie[1]
+            rank = movie[-2].strip()
+            if rank == "NULL":
+                continue
+            if float(rank) >= min_rank:
+                movies_dict[m_id] = name
+
+    #parse roles
+    with open(file_roles) as f:
+        for line in f:
+            role = re.split(',', line)
+            actor_id = int(role[0].strip())
+            movie_id = int(role[1].strip())
+            if movie_id not in movies_dict:
+                continue
+            if actor_id not in actors_dict:
+                continue
+            m_i = len(movies)
+            if movie_id not in movies:
+                movies[movie_id] = m_i
+            else:
+                m_i = movies[movie_id]
+            a_i = len(actors)
+            if actor_id not in actors:
+                actors[actor_id] = a_i
+            else:
+                a_i = actors[actor_id]
+
+            key = a_i, m_i
+            if key not in characteristic_matrix:
+                characteristic_matrix[key] = None
+
+    #swithing key and value
+    m = [0]*len(movies)
+    a = [0]*len(actors)
+    for m_id in movies:
+        m[movies[m_id]] = movies_dict[m_id]
+
+    for a_id in actors:
+        a[actors[a_id]] = actors_dict[a_id] 
+    print("   " + str(len(movies)) + " movies (with rank >= " + str(min_rank) + ")")
+    print("   " + str(len(actors)) + " actors")
+    print("   " + str(len(characteristic_matrix)) + " 1's in characteristic matrix")
+
+    return characteristic_matrix, m, a
 
 
 def get_first_prime_larger_than(N):
@@ -51,230 +122,162 @@ def get_hash_variables(p):
     return a, b
 
 
-def is_meta_character(role):
-    result = False
-    metas = ["Himself", "", "Herself", "Themselves", "Additional Voices", "Narrator", "Extra", "Host", "Undetermined Role", "Cameo appearance"]
-    if role in metas:
-        result = True
-    return result
-
-
-def clean(role):
-    role = re.split('\ \#[0-9]', role)[0] # Takes care of 'Person #2'
-    role = re.split('\ \(', role)[0] # Takes care of 'Merchant (1990)'
-    role = re.split('\ \[', role)[0] # Takes care of 'Merchant [1990]'
-    return role
-
-
-def parse_data():
-    movies_table = {}
-    movies = {}
-    roles = {}
-    characteristic_matrix = {}
-
-    with open(filename) as f:
-        for line in f:
-            if line.strip()[0:10] == "LOCK TABLE":
-                tabletype = line.strip()[13:-8].strip()
-                continue
-
-            if tabletype == "movies":
-                movie_id = int(re.split(',', line)[0].strip())
-                rank = re.split(',', line)[-2].strip()
-
-                if rank == "NULL":
-                    continue
-
-                rank = float(rank)
-                movies_table[movie_id] = rank
-
-            if tabletype == "roles":
-                movie_id = int(re.split(',', line)[1].strip())
-                role = re.split(',', line)[2].strip().strip("'")
-                
-                if movie_id not in movies_table: 
-                    continue
-
-                if is_meta_character(role):
-                    continue 
-                if movies_table[movie_id] >= min_rank:
-
-                    m_i = len(movies)
-                    if movie_id not in movies:
-                        movies[movie_id] = m_i
-                    else:
-                        m_i = movies[movie_id]
-                                         
-                    if role not in roles:
-                        r_i = len(roles)
-                        roles[role] = r_i    
-                     
-                    key = (r_i, m_i)
-                    if key not in characteristic_matrix:
-                        characteristic_matrix[key] = None
-    #initialise for proper length
-    m = [0]*len(movies)
-    r = [0]*len(roles)
-
-    print("   " + str(len(movies)) + " movies (with rank >= " + str(min_rank) + ")")
-    print("   " + str(len(roles)) + " roles")
-    print("   " + str(len(characteristic_matrix)) + " 1's in characteristic matrix")
-
-    #change role and movies dictionaries to list i.e. changing from id lookup to index lookup.
-    for m_id in movies:
-        m[movies[m_id]] = m_id
-
-    for role in roles:
-        r[roles[role]] = role 
-
-    return characteristic_matrix, m, r
-            
-
-def calculate_jaccard(matrix, movies, roles):
+def calculate_jaccard(matrix, movies, actors):
     similarity = {}
-    n = len(roles)
+    n = len(actors)
     m = len(movies)
-    for i in range(0,n):
+    for i in range(0, n):
         for j in range(i + 1, n):
             x = 0.0
             y = 0.0
-            for k in range(0, m):
-                if (i, k) in matrix and (j, k) in matrix:
+            for d in range(0,m):
+                if (i, d) in matrix and (j, d) in matrix:
                     x += 1.0
-                elif (i, k) in matrix or (j, k) in matrix:
+                elif (i, d) in matrix or (j, d) in matrix:
                     y += 1.0
-            similarity[roles[i],roles[j]] = x/(x+y)
+            similarity[actors[i],actors[j]] = x/(x+y)
     return similarity 
 
 
 def create_sig_matrix(matrix, m, n, k):
     hashes = []
     p = get_first_prime_larger_than(m)
-    signature_matrix = [[float('Inf')]*n for i in range(0, k)]
+    signature_matrix = [[float('Inf')]*k for i in range(0, n)]
     for i in range(0, k):
         hashes.append(get_hash_variables(p))
 
     for i, j in matrix:
         for pi, (a,b) in enumerate(hashes):
             hash_value = (a*j+b)%p%m
-            if hash_value < signature_matrix[pi][i]:
-                signature_matrix[pi][i] = hash_value
-    return signature_matrix, hashes
+            if hash_value < signature_matrix[i][pi]:
+                signature_matrix[i][pi] = hash_value
+    return signature_matrix
 
 
-def approximate_jaccard_lsh(matrix, movies, roles, K, bands):
+def approximate_jaccard_lsh(matrix, movies, actors, K, bands):
     similarity = {}
-    n = len(roles)
+    n = len(actors)
     m = len(movies)
-    signature_matrix, hash_functions = create_sig_matrix(matrix, m, n, K)
-    print("   signature_matrix done!")
-    M = K
-    r = M/bands
+    signature_matrix = create_sig_matrix(matrix, m, n, K)
+    r = K/bands
     print("   rows per band = " + str(r))
-    c = len(signature_matrix[0]) #number of signatures
-    p = int(c*bu) #number of buckets
-    
+
     #create buckets
-    buckets = []
-    for i in range(0, bands):
-        buckets.append([])
-        for j in range(0, p):
-            buckets[i].append([])
+    bucket_list = []
 
     #Hash to buckets
     for i in range(0, bands):
-        a, b = hash_functions[i*r]
-        for j in range(0, c):
-            str_list = []
-            for k in range(0,r):
-                str_list.append(str(signature_matrix[i*r + k][j]))
-            hashed_val = (a*int(''.join(str_list))+b)%p
-            buckets[i][hashed_val].append(j)
-
+        hashtable = {}
+        bucket_list.append(hashtable)
+        for j in range(0,n):
+            start_index = i*r
+            int_list = ''.join(str(x) for x in signature_matrix[j][start_index:start_index+r])
+            if int_list in hashtable:
+                hashtable[int_list].append(j)
+            else:
+                hashtable[int_list] = [j]
+    
     #Find candidate pairs
     candidate_pairs = set([])
-    for band in buckets:
-        for bucket in band:
-            for i in bucket:
-                for j in bucket:
-                    if i < j:
-                        candidate_pairs.add((i,j))
+    for hashtable in bucket_list:
+        for key in hashtable:
+            bucket = hashtable[key]
+
+            b_len = len(bucket)
+            if b_len > 1:
+                for i in range(0, b_len):
+                    for j in range(i + 1, b_len):
+                        candidate_pairs.add((bucket[i],bucket[j]))
+    
     print("   Number of candidate pairs: "+str(len(candidate_pairs)))
 
     # calculate similarity between candidate pairs
-    for i,j in candidate_pairs: 
-        similarity[roles[i],roles[j]] = 0.0
+    for i, j in candidate_pairs:
+        similarity[actors[i],actors[j]] = 0.0
         for pi in range(0, k):
-            if signature_matrix[pi][i] == signature_matrix[pi][j]:
-                similarity[roles[i],roles[j]] += 1
+            if signature_matrix[i][pi] == signature_matrix[j][pi]:
+                similarity[actors[i],actors[j]] += 1
 
-    for (r1, r2) in similarity:
-        similarity[r1, r2] /= float(K)
-
+    for (a1, a2) in similarity:
+        similarity[a1, a2] /= float(K)
     return similarity
 
 
-def approximate_jaccard_minhash(matrix, movies, roles, k):
+def approximate_jaccard_minhash(matrix, movies, actors, k):
     similarity = {}
-    n = len(roles)
+    n = len(actors)
     m = len(movies)
-    signature_matrix, _ = create_sig_matrix(matrix, m, n, k)
-    
-    for i in range(0, n):
+    signature_matrix = create_sig_matrix(matrix, m, n, k)
+    for i in range(0,n):
         for j in range(i + 1, n):
-            similarity[roles[i],roles[j]] = 0.0
+            similarity[actors[i],actors[j]] = 0.0
             for pi in range(0, k):
-                if signature_matrix[pi][i] == signature_matrix[pi][j]:
-                    similarity[roles[i],roles[j]] += 1
-    
+                if signature_matrix[i][pi] == signature_matrix[j][pi]:
+                    similarity[actors[i],actors[j]] += 1
     #calculating fractions                    
-    for (r1, r2) in similarity:
-        similarity[r1, r2] /= float(k)
+    for (a1, a2) in similarity:
+        similarity[a1, a2] /= float(k)
     return similarity
 
-def approximate_jaccard_minhash_bbit(matrix, movies, roles, k, b):
+
+def approximate_jaccard_minhash_bbit(matrix, movies, actors, k, b):
     similarity = {}
-    n = len(roles)
+    n = len(actors)
     m = len(movies)
-    signature_matrix, _ = create_sig_matrix(matrix, m, n, k)
-    
+    signature_matrix = create_sig_matrix(matrix, m, n, k)
+
     for i in range(0, len(signature_matrix)):
-        for j in range(0, len(signature_matrix)):
-            signature_matrix[i][j] = convert_to_bbit(signature_matrix[i][j],b)  
-
-    for i in range(0, n):
+        for j in range(0, len(signature_matrix[0])):
+            signature_matrix[i][j] = convert_to_bbit(signature_matrix[i][j], b)
+    #calculate similarity
+    for i in range(0,n):
         for j in range(i + 1, n):
-            similarity[roles[i],roles[j]] = 0.0
+            similarity[actors[i],actors[j]] = 0.0
             for pi in range(0, k):
-                if signature_matrix[pi][i] == signature_matrix[pi][j]:
-                    similarity[roles[i],roles[j]] += 1
-    
+                if signature_matrix[i][pi] == signature_matrix[j][pi]:
+                    similarity[actors[i],actors[j]] += 1
     #calculating fractions                    
-    for (r1, r2) in similarity:
-        similarity[r1, r2] /= float(k)
-    return similarity 
+    for (a1, a2) in similarity:
+        similarity[a1, a2] /= float(k)
+    return similarity
 
 def convert_to_bbit(value,b):
-    return bin(value)[-b:]
+    binary = bin(value)
+    if len(binary) > b + 2: 
+        return int(binary[-b:])
+    else:
+        print "b = 1, since input does not contain enough bits"
+        return int(binary[-1])
 
 
-print("Parsing data - " + filename)
+print("Parsing data - ")
 start = time.time()
-matrix, movies, roles = parse_data()
-
+matrix, movies, actors = parse_data_actors()
 print("   took "+str(time.time() - start)+" seconds\n")
+
+
+# print len(matrix), len(movies), len(actors)
+
+# for j in range(0,len(movies)):
+#     sys.stdout.write(str(movies[j])+" ")
+#     for i in range(0,len(actors)):
+#         if (i,j) in matrix:
+#             sys.stdout.write('1')
+#         else:
+#             sys.stdout.write('0')
+#     sys.stdout.write('\n')
 
 if naive:
     print("Running naive")
     start = time.time()
-    jaccard = calculate_jaccard(matrix, movies, roles )
+    jaccard = calculate_jaccard(matrix, movies, actors)
     print("   took "+str(time.time() - start)+" seconds\n")
 
 if minhash:
     print("Running Min Hashing")
     print("   k (hash functions) = " + str(k))
     start = time.time()
-    jaccard_approx = approximate_jaccard_minhash(matrix, movies, roles, k)
+    jaccard_approx = approximate_jaccard_minhash(matrix, movies, actors, k)
     max_value = max(jaccard_approx.values())
     print("   Max value is: " + str(max_value))
     print("   took "+str(time.time() - start)+" seconds\n")
@@ -284,31 +287,30 @@ if lsh:
     print("Running LSH")
     print("   k (hash functions) = " + str(k))
     print("   bands = " + str(b))
-    print("   bucket fraction = " + str(bu))
-    jaccard_approx = {}
     jaccard_approx = {}
     start = time.time()
-    jaccard_approx = approximate_jaccard_lsh(matrix, movies, roles, k, b)
-    max_value = max(jaccard_approx.values())
-    print("   Max value is: " + str(max_value))
+    jaccard_approx = approximate_jaccard_lsh(matrix, movies, actors, k, b)
+    sorted_jaccard = sorted(jaccard_approx.items(), key=operator.itemgetter(1), reverse=True)
     print("   took "+str(time.time() - start)+" seconds\n")
+    for i in range(0,100):
+        if i < len(sorted_jaccard):
+            print sorted_jaccard[i]
 
 if bbit:
     print("Running b-bit")
     print("   k (hash functions) = " + str(k))
+    print("   b bits = " + str(num_of_bits))
     jaccard_approx = {}
     start = time.time()
-    jaccard_approx = approximate_jaccard_minhash_bbit(matrix, movies, roles, k, b)
+    jaccard_approx = approximate_jaccard_minhash_bbit(matrix, movies, actors, k, num_of_bits)
     max_value = max(jaccard_approx.values())
     print("   Max value is: " + str(max_value))
     print("   took "+str(time.time() - start)+" seconds\n")
 
-"""
-for (r1,r2) in jaccard:
-    value = jaccard[r1,r2]
-    approx = jaccard_approx[r1,r2]
-    diff = abs(value - approx)
-    print "compare (" +r1+"-"+r2+"): "+ "\nvalue: " +str(value)+"\napproximate: "+ str(approx) +"\ndifference: "+ str(diff)+"\n"
+if naive and (bbit or minhash):
+    for (r1,r2) in jaccard:
+        value = jaccard[r1,r2]
+        approx = jaccard_approx[r1,r2]
+        diff = abs(value - approx)
+        print "compare (" +r1.strip()+"-"+r2.strip()+"): "+ "\nvalue: " +str(value)+"\napproximate: "+ str(approx) +"\ndifference: "+ str(diff)+"\n"
 
-
-"""
